@@ -363,7 +363,7 @@
 ;; `anything-eval-expression'
 ;; Preconfigured anything for `anything-c-source-evaluation-result'.
 ;; `anything-eval-expression-with-eldoc'
-;; Preconfigured anything for `anything-c-source-evaluation-result' with `eldoc' support. 
+;; Preconfigured anything for `anything-c-source-evaluation-result' with `eldoc' support.
 ;; `anything-calcul-expression'
 ;; Preconfigured anything for `anything-c-source-calculation-result'.
 ;; `anything-surfraw'
@@ -490,7 +490,7 @@
 ;; `anything-ff-avfs-directory'
 ;; Default Value: nil
 ;; `anything-ff-file-compressed-list'
-;; Default Value:	("gz" "bz2" "zip" "7z") 
+;; Default Value:	("gz" "bz2" "zip" "7z")
 ;; `anything-locate-db-file-regexp'
 ;; Default Value: "m?locate.db$"
 ;; `anything-c-show-info-in-mode-line-delay'
@@ -1795,7 +1795,7 @@ Enjoy!")))
   (let ((anything-help-message "== Anything Buffer ==
 \nTips:
 You can enter a partial name of major-mode (e.g lisp, sh) to narrow down buffers.
-Enter then a space and a pattern to narrow down to buffers matching this pattern. 
+Enter then a space and a pattern to narrow down to buffers matching this pattern.
 \nSpecific commands for `anything-buffers-list':
 \\<anything-c-buffer-map>
 \\[anything-buffer-run-zgrep]\t\t->Grep Buffer(s) works as zgrep too. (C-u grep all buffers but non--file buffers).
@@ -1835,7 +1835,7 @@ Enter then a space and a pattern to narrow down to buffers matching this pattern
 - Use `C-u C-z' to watch an image.
 - To browse images directories turn on `anything-follow-mode' and navigate with arrow keys.
 - When entered ediff, hitting `C-g' will ask you to use locate to find the file to ediff with.
- 
+
 \nSpecific commands for `anything-find-files':
 \\<anything-find-files-map>
 \\[anything-ff-run-locate]\t\t->Run Locate on basename of candidate (C-u to specify locate db).
@@ -2374,7 +2374,7 @@ MATCH match only filenames matching regexp MATCH."
                                 ;; Don't recurse in directory symlink.
                                 (unless (file-symlink-p f)
                                   (ls-R f)))
-                      else do 
+                      else do
                       (unless (and ,match (not (string-match ,match (file-name-nondirectory f))))
                         (push (funcall fn f) result)))))
        (ls-R ,directory)
@@ -2647,7 +2647,7 @@ If REGEXP-FLAG is given use `query-replace-regexp'."
   (let ((fn     (if regexp-flag 'query-replace-regexp 'query-replace))
         (prompt (if regexp-flag "Query replace regexp" "Query replace"))
         (bufs   (anything-marked-candidates)))
-    (loop 
+    (loop
           with replace = (query-replace-read-from prompt regexp-flag)
           with tostring = (unless (consp replace)
                             (query-replace-read-to
@@ -2938,7 +2938,7 @@ ACTION must be an action supported by `anything-dired-action'."
                   prompt
                   :preselect (if anything-ff-transformer-show-only-basename
                                  (anything-c-basename cand) cand)
-                  :initial-input (anything-dwim-target-directory) 
+                  :initial-input (anything-dwim-target-directory)
                   :history (anything-find-files-history :comp-read nil))))
     (anything-dired-action
      dest :files ifiles :action action :follow parg)))
@@ -2981,7 +2981,7 @@ ACTION must be an action supported by `anything-dired-action'."
   (let ((bname  (anything-c-basename candidate))
         (prompt (if merge "Ediff Merge `%s' With File: "
                     "Ediff `%s' With File: "))
-        (fun    (if merge 'ediff-merge-files 'ediff-files))) 
+        (fun    (if merge 'ediff-merge-files 'ediff-files)))
     (funcall fun
              candidate
              (condition-case quit
@@ -3274,7 +3274,7 @@ See `anything-ff-serial-rename-1'."
   (anything-ff-serial-rename-action 'copy))
 
 (defun anything-c-quit-and-execute-action (action)
-  "Quit current anything session and execute ACTION." 
+  "Quit current anything session and execute ACTION."
   (setq anything-saved-action action)
   (anything-exit-minibuffer))
 
@@ -3451,7 +3451,7 @@ Same as `dired-do-print' but for anything."
                            (anything-comp-read
                             "Printer: " anything-ff-printer-list)
                            printer-name))
-	 (command (read-string
+     (command (read-string
                    (format "Print *%s File(s):\n%s with: "
                            len
                            (mapconcat
@@ -3941,7 +3941,7 @@ in `anything-find-files-persistent-action'."
 (defun anything-ff-run-kill-buffer-persistent ()
   "Execute `anything-ff-kill-buffer-fname' whitout quitting."
   (interactive)
-  (anything-attrset 'kill-buffer-fname 'anything-ff-kill-buffer-fname)  
+  (anything-attrset 'kill-buffer-fname 'anything-ff-kill-buffer-fname)
   (anything-execute-persistent-action 'kill-buffer-fname))
 
 (defun anything-ff-human-size (size)
@@ -4039,7 +4039,7 @@ is non--nil."
   (if (and (string-match tramp-file-name-regexp anything-pattern)
            anything-ff-tramp-not-fancy)
       (if anything-ff-transformer-show-only-basename
-          (loop for i in files collect 
+          (loop for i in files collect
                 (if (string-match "[.]\\{1,2\\}$" i)
                     i (cons (anything-c-basename i) i)))
           files)
@@ -7119,7 +7119,7 @@ If FILE is nil return nil."
 
 ;;; Semantic
 ;;
-;; 
+;;
 (defvar anything-semantic-candidates nil)
 
 (defun anything-semantic-construct-candidates (tags depth)
@@ -8159,7 +8159,7 @@ http://bbdb.sourceforge.net/")
   "Return eldoc in mode-line for current minibuffer input."
   (let ((buf (with-selected-window (minibuffer-window)
                (buffer-name))))
-    (when (member buf anything-eldoc-active-minibuffers-list)  
+    (when (member buf anything-eldoc-active-minibuffers-list)
       (let* ((str-all (with-current-buffer buf
                         (minibuffer-completion-contents)))
              (sym     (when str-all
@@ -9502,7 +9502,7 @@ Keys description:
 
 - DEFAULT: This option is used only for compatibility with regular
   Emacs `completing-read'.
- 
+
 - BUFFER: Name of anything-buffer.
 
 - MUST-MATCH: Candidate selected must be one of COLLECTION.
@@ -9539,7 +9539,7 @@ Keys description:
 - CANDIDATES-IN-BUFFER: when non--nil use a source build with
   `anything-candidates-in-buffer' which is much faster.
   Argument VOLATILE have no effect when CANDIDATES-IN-BUFFER is non--nil.
- 
+
 Any prefix args passed during `anything-comp-read' invocation will be recorded
 in `anything-current-prefix-arg', otherwise if prefix args were given before
 `anything-comp-read' invocation, the value of `current-prefix-arg' will be used.
@@ -9747,7 +9747,7 @@ It should be used when candidate list don't need to rebuild dynamically."
             inherit-input-method)
   "An anything replacement of `completing-read'.
 This function should be used only as a `completing-read-function'.
- 
+
 Don't use it directly, use instead `anything-comp-read' in your programs.
 
 See documentation of `completing-read' and `all-completions' for details."
@@ -11693,7 +11693,14 @@ First call open the kill-ring browser, next calls move to next line."
   (anything :sources '(anything-c-source-buffers-list
                        anything-c-source-buffer-not-found)
             :buffer "*anything buffers*" :keymap anything-c-buffer-map))
-(defalias 'anything-buffers+ 'anything-buffer-list)
+;;;###autoload
+(defun anything-buffers+ ()
+  "Enhanced preconfigured `anything' for buffer."
+  (interactive)
+  (anything :sources '(anything-c-source-buffers-list
+                       anything-c-source-buffer-not-found)
+            :buffer "*anything buffers*" :keymap anything-c-buffer-map))
+;;(defalias 'anything-buffers+ 'anything-buffer-list)
 ;;;###autoload
 (defun anything-bbdb ()
   "Preconfigured `anything' for BBDB.
@@ -12256,7 +12263,7 @@ http://www.emacswiki.org/emacs/download/yaoddmuse.el"
   (let* ((engine-nodesc (car (split-string engine)))
          (url (with-temp-buffer
                 (apply 'call-process "surfraw" nil t nil
-		       ;;JAVE
+               ;;JAVE
                        (append  (list engine-nodesc "-p") (split-string pattern)))
                 (replace-regexp-in-string
                  "\n" "" (buffer-string))))
