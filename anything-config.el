@@ -3766,7 +3766,7 @@ purpose."
           ;; Return PATTERN unchanged.
           (t pattern))))
 
-(defun anything-find-files-get-candidates ()
+(defun anything-find-files-get-candidates (&optional require-match)
   "Create candidate list for `anything-c-source-find-files'."
   (let* ((path          (anything-ff-set-pattern anything-pattern))
          (path-name-dir (if (file-directory-p path)
@@ -3806,7 +3806,7 @@ purpose."
            (list (format "Opening directory: access denied, `%s'" path)))
           ((file-directory-p path) (anything-ff-directory-files path t))
           (t
-           (append (list path) (anything-ff-directory-files path-name-dir t))))))
+           (append (unless require-match (list path)) (anything-ff-directory-files path-name-dir t))))))
 
 (defun anything-ff-directory-files (directory &optional full)
   "List contents of DIRECTORY.
@@ -4629,6 +4629,7 @@ This is deprecated for Emacs24+ users, use `ac-mode' instead."
                                    test
                                    (preselect nil)
                                    (history nil)
+                                   must-match
                                    (marked-candidates nil)
                                    (alistp t)
                                    (persistent-action 'anything-find-files-persistent-action)
@@ -4637,17 +4638,37 @@ This is deprecated for Emacs24+ users, use `ac-mode' instead."
 INITIAL-INPUT is a valid path, TEST is a predicate that take one arg."
   (when (get-buffer anything-action-buffer)
     (kill-buffer anything-action-buffer))
-  (let ((anything-mp-highlight-delay nil)
-        ;; Be sure we don't erase the underlying minibuffer if some.
-        (anything-ff-auto-update-initial-value
-         (not (minibuffer-window-active-p (minibuffer-window))))
-        anything-same-window
-        (hist (and history (anything-comp-read-get-candidates
-                            history nil nil alistp))))
-    (flet ((action-fn (candidate)
-             (if marked-candidates
-                 (anything-marked-candidates)
-                 (identity candidate))))
+  
+  ;; Assume completion have been already required,
+  ;; so always use 'confirm.
+  (when (eq must-match 'confirm-after-completion)
+    (setq must-match 'confirm))
+
+  (flet ((action-fn (candidate)
+           (if marked-candidates
+               (anything-marked-candidates)
+               (identity candidate))))
+  
+    (let* ((anything-mp-highlight-delay nil)
+           ;; Be sure we don't erase the underlying minibuffer if some.
+           (anything-ff-auto-update-initial-value
+            (not (minibuffer-window-active-p (minibuffer-window))))
+           anything-same-window
+           (hist (and history (anything-comp-read-get-candidates
+                               history nil nil alistp))))
+           ;; (minibuffer-completion-confirm (unless (eq must-match t)
+           ;;                                  must-match))
+           ;; (keymap (when must-match minibuffer-local-must-match-map))
+           ;; (anything-map (make-composed-keymap
+           ;;                ;; Merge some anything bindings
+           ;;                ;; that clash with minibuffer ones.
+           ;;                (list '(keymap
+           ;;                        (7 . anything-keyboard-quit)
+           ;;                        (up . anything-previous-line)
+           ;;                        (down . anything-next-line))
+           ;;                      keymap)
+           ;;                anything-c-read-file-map)))
+      
       (or (anything
            :sources
            `(((name . ,(format "%s History" name))
@@ -4669,7 +4690,7 @@ INITIAL-INPUT is a valid path, TEST is a predicate that take one arg."
               (disable-shortcuts)
               (mode-line . anything-read-file-name-mode-line-string)
               (candidates . (lambda ()
-                              (let ((seq (anything-find-files-get-candidates)))
+                              (let ((seq (anything-find-files-get-candidates must-match)))
                                 (if test
                                     (loop for fname in seq
                                           when (funcall test fname) collect fname)
@@ -4683,10 +4704,14 @@ INITIAL-INPUT is a valid path, TEST is a predicate that take one arg."
               (action . ,'action-fn)))
            :input initial-input
            :prompt prompt
-           :keymap anything-c-read-file-map
            :resume 'noresume
            :buffer buffer
+           :keymap anything-c-read-file-map
            :preselect preselect)
+          (when (and (not (string= anything-pattern ""))
+                     (eq anything-exit-status 0)
+                     (eq must-match 'confirm))
+            (identity anything-pattern))
           (keyboard-quit)))))
 
 
@@ -9551,6 +9576,8 @@ that use `anything-comp-read' See `anything-M-x' for example."
            (if marked-candidates
                (anything-marked-candidates)
                (identity candidate))))
+    ;; Assume completion have been already required,
+    ;; so always use 'confirm.
     (when (eq must-match 'confirm-after-completion)
       (setq must-match 'confirm))
     (let* ((minibuffer-completion-confirm (unless (eq must-match t)
@@ -9570,11 +9597,14 @@ that use `anything-comp-read' See `anything-M-x' for example."
                         . (lambda ()
                             (let ((all (anything-comp-read-get-candidates
                                         history nil nil ,alistp)))
-                              (anything-fast-remove-dups
-                               (if (and default (not (string= default "")))
-                                   (delq nil (cons default (delete default all)))
-                                   all)
-                               :test 'equal))))
+                              (delete
+                               ""
+                               (anything-fast-remove-dups
+                                (if (and default (not (string= default "")))
+                                    (delq nil (cons default
+                                                    (delete default all)))
+                                    all)
+                                :test 'equal)))))
                        (filtered-candidate-transformer
                         . (lambda (candidates sources)
                             (loop for i in candidates
@@ -9632,9 +9662,10 @@ that use `anything-comp-read' See `anything-M-x' for example."
         :preselect preselect
         :prompt prompt
         :resume 'noresume
-        :history input-history
+        :history (and (symbolp input-history) input-history)
         :buffer buffer)
        (when (and (not (string= anything-pattern ""))
+                  (eq anything-exit-status 0)
                   (eq must-match 'confirm))
          (identity anything-pattern))
        (unless (or (eq anything-exit-status 1) must-match)
@@ -9892,6 +9923,7 @@ See documentation of `completing-read' and `all-completions' for details."
                        :buffer buf-name
                        :initial-input (expand-file-name init dir)
                        :alistp nil
+                       :must-match mustmatch
                        :test predicate))))
       (ac-mode 1)
       (ido-mode (if ido-state 1 -1))
