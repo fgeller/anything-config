@@ -1609,6 +1609,7 @@ automatically.")
 
 (defvar anything-c-read-file-map
   (let ((map (copy-keymap anything-map)))
+    (define-key map (kbd "C-]")           'anything-ff-run-toggle-basename)
     (define-key map (kbd "C-.")           'anything-find-files-down-one-level)
     (define-key map (kbd "C-l")           'anything-find-files-down-one-level)
     (define-key map (kbd "C-<backspace>") 'anything-ff-run-toggle-auto-update)
@@ -2160,24 +2161,6 @@ The output is sexps which are evaluated by \\[eval-last-sexp]."
     (mapc (lambda (s) (princ (format ";; (anything '%s)\n" s)))
           (apropos-internal "^anything-c-source" #'boundp))
     (pop-to-buffer standard-output)))
-
-(defun anything-nest (&rest same-as-anything)
-  "Nested `anything'. If you use `anything' within `anything', use it."
-  (with-selected-window (anything-window)
-    (let (anything-current-position
-          anything-current-buffer
-          (orig-anything-buffer anything-buffer)
-          anything-pattern
-          anything-buffer
-          anything-sources
-          anything-compiled-sources
-          anything-buffer-chars-modified-tick
-          (anything-samewindow t)
-          (enable-recursive-minibuffers t))
-      (unwind-protect
-           (apply #'anything same-as-anything)
-        (anything-initialize-overlays orig-anything-buffer)
-        (add-hook 'post-command-hook 'anything-check-minibuffer-input)))))
 
 (defun anything-displaying-source-names ()
   "Display sources name."
@@ -3806,7 +3789,8 @@ purpose."
            (list (format "Opening directory: access denied, `%s'" path)))
           ((file-directory-p path) (anything-ff-directory-files path t))
           (t
-           (append (unless require-match (list path)) (anything-ff-directory-files path-name-dir t))))))
+           (append (unless require-match (list path))
+                   (anything-ff-directory-files path-name-dir t))))))
 
 (defun anything-ff-directory-files (directory &optional full)
   "List contents of DIRECTORY.
@@ -4655,19 +4639,17 @@ INITIAL-INPUT is a valid path, TEST is a predicate that take one arg."
             (not (minibuffer-window-active-p (minibuffer-window))))
            anything-same-window
            (hist (and history (anything-comp-read-get-candidates
-                               history nil nil alistp))))
-           ;; (minibuffer-completion-confirm (unless (eq must-match t)
-           ;;                                  must-match))
-           ;; (keymap (when must-match minibuffer-local-must-match-map))
-           ;; (anything-map (make-composed-keymap
-           ;;                ;; Merge some anything bindings
-           ;;                ;; that clash with minibuffer ones.
-           ;;                (list '(keymap
-           ;;                        (7 . anything-keyboard-quit)
-           ;;                        (up . anything-previous-line)
-           ;;                        (down . anything-next-line))
-           ;;                      keymap)
-           ;;                anything-c-read-file-map)))
+                               history nil nil alistp)))
+           (minibuffer-completion-confirm must-match)
+           (must-match-map (when must-match
+                             (let ((map (make-sparse-keymap)))
+                               (define-key map (kbd "RET")
+                                 'anything-confirm-and-exit-minibuffer)
+                               map)))
+           (anything-map (if must-match-map
+                             (make-composed-keymap
+                              must-match-map anything-c-read-file-map)
+                             anything-c-read-file-map)))
       
       (or (anything
            :sources
@@ -4690,11 +4672,7 @@ INITIAL-INPUT is a valid path, TEST is a predicate that take one arg."
               (disable-shortcuts)
               (mode-line . anything-read-file-name-mode-line-string)
               (candidates . (lambda ()
-                              (let ((seq (anything-find-files-get-candidates must-match)))
-                                (if test
-                                    (loop for fname in seq
-                                          when (funcall test fname) collect fname)
-                                    seq))))
+                              (anything-find-files-get-candidates must-match)))
               (filtered-candidate-transformer anything-c-find-files-transformer)
               (persistent-action . ,persistent-action)
               (candidate-number-limit . 9999)
@@ -4706,7 +4684,6 @@ INITIAL-INPUT is a valid path, TEST is a predicate that take one arg."
            :prompt prompt
            :resume 'noresume
            :buffer buffer
-           :keymap anything-c-read-file-map
            :preselect preselect)
           (when (and (not (string= anything-pattern ""))
                      (eq anything-exit-status 0)
@@ -9580,18 +9557,16 @@ that use `anything-comp-read' See `anything-M-x' for example."
     ;; so always use 'confirm.
     (when (eq must-match 'confirm-after-completion)
       (setq must-match 'confirm))
-    (let* ((minibuffer-completion-confirm (unless (eq must-match t)
-                                            must-match))
-           (keymap (when must-match minibuffer-local-must-match-map))
-           (anything-map (make-composed-keymap
-                          ;; Merge some anything bindings
-                          ;; that clash with minibuffer ones.
-                          (list '(keymap
-                                  (7 . anything-keyboard-quit)
-                                  (up . anything-previous-line)
-                                  (down . anything-next-line))
-                                keymap)
-                          anything-map))
+    (let* ((minibuffer-completion-confirm must-match)
+           (must-match-map (when must-match
+                             (let ((map (make-sparse-keymap)))
+                               (define-key map (kbd "RET")
+                                 'anything-confirm-and-exit-minibuffer)
+                               map)))
+           (anything-map (if must-match-map
+                             (make-composed-keymap
+                              must-match-map anything-map)
+                             anything-map))
            (src-hist `((name . ,(format "%s History" name))
                        (candidates
                         . (lambda ()
@@ -12127,38 +12102,18 @@ It is `anything' replacement of regular `M-x' `execute-extended-command'."
                    (message nil) ; Erase the new stupid message Type "q"[...]
                    (setq in-help t))
                (setq help-cand candidate))))
-      (let* ((command
-              (or
-               (anything
-                :sources
-                `(((name . "Emacs Commands history")
-                   (candidates . ,history)
-                   (filtered-candidate-transformer
-                    . (lambda (candidates sources)
-                        (loop for i in candidates
-                              do (set-text-properties 0 (length i) nil i)
-                              collect i)))
-                   (persistent-action . pers-help)
-                   (persistent-help . "Describe this command")
-                   (action . identity))
-                  ((name . "Emacs Commands")
-                   (init
-                    . (lambda ()
-                        (with-current-buffer (anything-candidate-buffer 'global)
-                          (goto-char (point-min))
-                          (loop for sym in
-                                (all-completions "" obarray 'commandp)
-                                do (insert (concat sym "\n"))))))
-                   (persistent-action . pers-help)
-                   (persistent-help . "Describe this command")
-                   (filtered-candidate-transformer . anything-M-x-transformer)
-                   (candidates-in-buffer)
-                   (action . identity)))
-                :resume 'noresume
-                :prompt "M-x "
-                :history 'anything-M-x-input-history
-                :buffer "*anything M-x*")
-               (keyboard-quit)))
+      (let* ((command (anything-comp-read
+                       "M-x " obarray
+                       :test 'commandp
+                       :requires-pattern 2
+                       :name "Emacs Commands"
+                       :persistent-action 'pers-help
+                       :persistent-help "Describe this command"
+                       :history history
+                       :sort 'string-lessp
+                       :must-match t
+                       :candidates-in-buffer t
+                       :fc-transformer 'anything-M-x-transformer))
              (sym-com (intern command)))
         (unless current-prefix-arg
           (setq current-prefix-arg anything-current-prefix-arg))

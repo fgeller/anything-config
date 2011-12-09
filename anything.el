@@ -1801,6 +1801,34 @@ are same args as in `anything'."
 Call `anything' with only ANY-SOURCES and ANY-BUFFER as args."
   (anything :sources any-sources :buffer any-buffer))
 
+(defun anything-nest (&rest same-as-anything)
+  "Nested `anything'. If you use `anything' within `anything', use it."
+  (with-anything-window
+    (let (anything-current-position
+          anything-current-buffer
+          (orig-anything-current-buffer anything-current-buffer)
+          (orig-anything-buffer anything-buffer)
+          (orig-anything-last-frame-or-window-configuration
+           anything-last-frame-or-window-configuration)
+          anything-pattern
+          (anything-buffer (or (getf same-as-anything :buffer)
+                               (nth 5 same-as-anything)
+                               "*Anything*"))
+          anything-sources
+          anything-compiled-sources
+          (anything-samewindow t)
+          (enable-recursive-minibuffers t))
+      (unwind-protect
+           (apply #'anything same-as-anything)
+        (with-current-buffer orig-anything-buffer
+          (anything-initialize-overlays orig-anything-buffer)
+          (setq anything-buffer (current-buffer))
+          (anything-mark-current-line)
+          (setq anything-last-frame-or-window-configuration
+                orig-anything-last-frame-or-window-configuration)
+          (setq cursor-type t)
+          (setq anything-current-buffer orig-anything-current-buffer))))))
+
 
 ;;; Initialize
 ;;
@@ -2957,6 +2985,25 @@ Exit with 1 mean anything abort with \\[keyboard-quit]
 It is useful for example to restore a window config if anything abort
 in special cases.
 See `anything-exit-minibuffer' and `anything-keyboard-quit'.")
+
+(defun anything-confirm-and-exit-minibuffer ()
+  "Maybe ask for confirmation when exiting anything.
+It is similar to `minibuffer-complete-and-exit' adapted to anything.
+If `minibuffer-completion-confirm' value is 'confirm,
+send in minibuffer confirm message and exit on next hit.
+If `minibuffer-completion-confirm' value is t,
+don't exit and send message 'no match'."
+  (interactive)
+  (let ((empty-buffer-p (with-current-buffer anything-buffer
+                          (eq (point-min) (point-max)))))
+      (cond ((and empty-buffer-p
+                  (eq minibuffer-completion-confirm 'confirm))
+             (setq minibuffer-completion-confirm nil)
+             (minibuffer-message " [confirm]"))
+            ((and empty-buffer-p
+                  (eq minibuffer-completion-confirm t))
+             (minibuffer-message " [No match]"))
+            (t (anything-exit-minibuffer)))))
 
 (defun anything-exit-minibuffer ()
   "Select the current candidate by exiting the minibuffer."
