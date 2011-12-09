@@ -4622,7 +4622,7 @@ This is deprecated for Emacs24+ users, use `ac-mode' instead."
 INITIAL-INPUT is a valid path, TEST is a predicate that take one arg."
   (when (get-buffer anything-action-buffer)
     (kill-buffer anything-action-buffer))
-  
+
   ;; Assume completion have been already required,
   ;; so always use 'confirm.
   (when (eq must-match 'confirm-after-completion)
@@ -4632,7 +4632,7 @@ INITIAL-INPUT is a valid path, TEST is a predicate that take one arg."
            (if marked-candidates
                (anything-marked-candidates)
                (identity candidate))))
-  
+
     (let* ((anything-mp-highlight-delay nil)
            ;; Be sure we don't erase the underlying minibuffer if some.
            (anything-ff-auto-update-initial-value
@@ -4650,7 +4650,7 @@ INITIAL-INPUT is a valid path, TEST is a predicate that take one arg."
                              (make-composed-keymap
                               must-match-map anything-c-read-file-map)
                              anything-c-read-file-map)))
-      
+
       (or (anything
            :sources
            `(((name . ,(format "%s History" name))
@@ -9659,7 +9659,7 @@ that use `anything-comp-read' See `anything-M-x' for example."
 ;; Provide a mode `anything-completion-mode' which turn on
 ;; anything in all `completing-read' and `read-file-name' in Emacs.
 ;;
-(defvar anything-completion-mode-string " AC")
+(defvar anything-completion-mode-string " AnyC")
 
 (defvar anything-completion-mode-quit-message
   "Anything completion disabled")
