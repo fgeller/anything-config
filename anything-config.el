@@ -16,15 +16,15 @@
 
 ;; Created: 2009-02-16 21:38:23
 
-;; X-URL: http://repo.or.cz/w/anything-config.git
+;; X-URL: <http://repo.or.cz/w/anything-config.git>
 
-;; MailingList: https://groups.google.com/group/emacs-anything?hl=en
+;; MailingList: <https://groups.google.com/group/emacs-anything?hl=en>
 
 ;; Keywords: anything, anything-config
 
 ;; Compatibility: GNU Emacs 22 ~ 24
 
-;; Dependencies: `anything.el'
+;; Dependencies: `anything.el', `anything-match-plugin.el'.
 
 ;;; This file is NOT part of GNU Emacs
 
@@ -44,11 +44,6 @@
 ;; along with this program; see the file COPYING.  If not, write to
 ;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth
 ;; Floor, Boston, MA 02110-1301, USA.
-
-;;; !NOTICE!
-;;
-;; If this file does not work, upgrade anything.el!
-;; http://www.emacswiki.org/cgi-bin/wiki/download/anything.el
 
 ;;; Commentary:
 ;;
@@ -77,6 +72,10 @@
 ;; directly, because you can define multiple anything commands with
 ;; different sources. Each anything command should have own anything
 ;; buffer, because M-x anything-resume revives anything command.
+
+;; NOTE: What you find on Emacswiki is mostly deprecated and not maintained,
+;;       don't complain if you use such code or configuration and something
+;;       doesn't work.
 
 
 ;;; Autodoc documentation:
@@ -170,6 +169,8 @@
 ;; Run Ediff merge file action from `anything-c-source-find-files'.
 ;; `anything-ff-run-symlink-file'
 ;; Run Symlink file action from `anything-c-source-find-files'.
+;; `anything-ff-run-hardlink-file'
+;; Run Hardlink file action from `anything-c-source-find-files'.
 ;; `anything-ff-run-delete-file'
 ;; Run Delete file action from `anything-c-source-find-files'.
 ;; `anything-ff-run-complete-fn-at-point'
@@ -216,8 +217,6 @@
 ;; Run grep goto other window action from `anything-do-grep-1'.
 ;; `anything-c-grep-run-save-buffer'
 ;; Run grep save results action from `anything-do-grep-1'.
-;; `anything-do-pdfgrep'
-;; Not documented.
 ;; `anything-yank-text-at-point'
 ;; Yank text at point in minibuffer.
 ;; `anything-c-describe-attributes'
@@ -279,9 +278,9 @@
 ;; `anything-yahoo-suggest'
 ;; Preconfigured `anything' for Yahoo searching with Yahoo suggest.
 ;; `anything-for-buffers'
-;; Preconfigured `anything' for buffer.
+;; Preconfigured `anything' for buffers.
 ;; `anything-buffers-list'
-;; Enhanced preconfigured `anything' for buffer.
+;; Preconfigured `anything' to list buffers.
 ;; `anything-bbdb'
 ;; Preconfigured `anything' for BBDB.
 ;; `anything-locate'
@@ -342,6 +341,8 @@
 ;; Preconfigured `anything' to hardlink files from dired.
 ;; `anything-do-grep'
 ;; Preconfigured anything for grep.
+;; `anything-do-pdfgrep'
+;; Preconfigured anything for pdfgrep.
 ;; `anything-c-etags-select'
 ;; Preconfigured anything for etags.
 ;; `anything-filelist'
@@ -432,7 +433,7 @@
 ;; `anything-create--actions-private'
 ;; Default Value: nil
 ;; `anything-allow-skipping-current-buffer'
-;; Default Value: t
+;; Default Value: nil
 ;; `anything-c-enable-eval-defun-hack'
 ;; Default Value: t
 ;; `anything-tramp-verbose'
@@ -808,6 +809,20 @@
   (defun window-system (&optional arg)
     window-system))
 
+(unless (fboundp 'make-composed-keymap)
+  (defun make-composed-keymap (maps &optional parent)
+    "Construct a new keymap composed of MAPS and inheriting from PARENT.
+When looking up a key in the returned map, the key is looked in each
+keymap of MAPS in turn until a binding is found.
+If no binding is found in MAPS, the lookup continues in PARENT, if non-nil.
+As always with keymap inheritance, a nil binding in MAPS overrides
+any corresponding binding in PARENT, but it does not override corresponding
+bindings in other keymaps of MAPS.
+MAPS can be a list of keymaps or a single keymap.
+PARENT if non-nil should be a keymap."
+    `(keymap
+      ,@(if (keymapp maps) (list maps) maps)
+      ,@parent)))
 
 
 ;;; Customize
@@ -1585,6 +1600,7 @@ automatically.")
     (define-key map (kbd "M-B")           'anything-ff-run-byte-compile-file)
     (define-key map (kbd "M-L")           'anything-ff-run-load-file)
     (define-key map (kbd "M-S")           'anything-ff-run-symlink-file)
+    (define-key map (kbd "M-H")           'anything-ff-run-hardlink-file)
     (define-key map (kbd "M-D")           'anything-ff-run-delete-file)
     (define-key map (kbd "M-K")           'anything-ff-run-kill-buffer-persistent)
     (define-key map (kbd "C-d")           'anything-ff-persistent-delete)
@@ -1630,6 +1646,7 @@ automatically.")
     (when anything-ff-lynx-style-map
       (define-key map (kbd "<left>")      'anything-find-files-down-one-level)
       (define-key map (kbd "<right>")     'anything-execute-persistent-action)
+      (define-key map (kbd "C-o")         nil)
       (define-key map (kbd "<M-left>")    'anything-previous-source)
       (define-key map (kbd "<M-right>")   'anything-next-source))
     (delq nil map))
@@ -1862,9 +1879,10 @@ Enter then a space and a pattern to narrow down to buffers matching this pattern
 \\[anything-ff-run-byte-compile-file]\t\t->Byte Compile File (C-u Load).
 \\[anything-ff-run-load-file]\t\t->Load File.
 \\[anything-ff-run-symlink-file]\t\t->Symlink File.
+\\[anything-ff-run-hardlink-file]\t\t->Hardlink file.
 \\[anything-ff-run-delete-file]\t\t->Delete File.
 \\[anything-ff-run-kill-buffer-persistent]\t\t->Kill buffer candidate without quitting.
-\\[anything-ff-persistent-delete]\t->Delete file without quitting.
+\\[anything-ff-persistent-delete]\t\t->Delete file without quitting.
 \\[anything-ff-run-switch-to-eshell]\t\t->Switch to Eshell.
 \\[anything-ff-run-eshell-command-on-file]\t\t->Eshell command on file (C-u Run on all marked files at once).
 \\[anything-ff-run-ediff-file]\t\t->Ediff file.
@@ -1904,7 +1922,7 @@ Enter then a space and a pattern to narrow down to buffers matching this pattern
 \\<anything-c-read-file-map>
 \\[anything-find-files-down-one-level]\t\t->Go down precedent directory.
 \\[anything-ff-run-toggle-auto-update]\t->Toggle auto expansion of directories.
-\\[anything-next-source]\t\t->Goto next source.
+\\[anything-next-source]\t->Goto next source.
 \\[anything-previous-source]\t->Goto previous source.
 \\[anything-read-file-name-help]\t\t->Display this help info.
 \n== Anything Map ==
@@ -2613,6 +2631,7 @@ Should be called after others transformers i.e (boring buffers)."
     (volatile)
     (mode-line . anything-buffer-mode-line-string)
     (persistent-help . "Show this buffer / C-u \\[anything-execute-persistent-action]: Kill this buffer")))
+
 (defvaralias 'anything-c-source-buffers+ 'anything-c-source-buffers-list)
 
 (defun anything-c-buffer-match-major-mode (candidate)
@@ -3374,6 +3393,12 @@ See `anything-ff-serial-rename-1'."
   "Run Symlink file action from `anything-c-source-find-files'."
   (interactive)
   (anything-c-quit-and-execute-action 'anything-find-files-symlink))
+
+;;;###autoload
+(defun anything-ff-run-hardlink-file ()
+  "Run Hardlink file action from `anything-c-source-find-files'."
+  (interactive)
+  (anything-c-quit-and-execute-action 'anything-find-files-hardlink))
 
 ;;;###autoload
 (defun anything-ff-run-delete-file ()
@@ -5429,20 +5454,6 @@ If a prefix arg is given run grep on all buffers ignoring non--file-buffers."
      "pdf-reader" nil
      (format-spec anything-c-pdfgrep-default-read-command
                   (list (cons ?f fname) (cons ?p pageno))))))
-
-(defun anything-do-pdfgrep ()
-  (interactive)
-  (let ((only (anything-c-read-file-name
-               "Search in file(s): "
-               :marked-candidates t
-               :test #'(lambda (file)
-                         (or (string= (file-name-extension file) "pdf")
-                             (string= (file-name-extension file) "PDF")
-                             (file-directory-p file)))
-               :preselect (or (dired-get-filename nil t)
-                              (buffer-file-name (current-buffer)))))
-        (anything-c-grep-default-function 'anything-c-pdfgrep-init))
-    (anything-do-pdfgrep-1 only)))
 
 
 ;; Yank text at point.
@@ -8488,18 +8499,19 @@ When nil, fallback to `browse-url-browser-function'.")
 
 (defun anything-c-emms-files-modifier (candidates source)
   (let ((current-playlist (with-current-emms-playlist
-                              (loop
-                                    with cur-list = (emms-playlist-tracks-in-region
+                              (loop with cur-list = (emms-playlist-tracks-in-region
                                                      (point-min) (point-max))
                                     for i in cur-list
-                                    collect (assoc-default 'name i)))))
+                                    for name = (assoc-default 'name i)
+                                    when name
+                                    collect name))))
     (loop for i in candidates
           if (member (cdr i) current-playlist)
           collect (cons (propertize (car i)
                                     'face 'anything-emms-playlist)
                         (cdr i)) into lis
           else collect i into lis
-          finally return lis)))
+          finally return (reverse lis))))
 
 (defun anything-c-emms-play-current-playlist ()
   "Play current playlist."
@@ -8519,6 +8531,7 @@ When nil, fallback to `browse-url-browser-function'.")
                           for info      = (concat artist " - " genre " - " tracknum ": " song)
                           unless (string-match "^http:" name) collect (cons info name))))
     (filtered-candidate-transformer . anything-c-emms-files-modifier)
+    (candidate-number-limit . 9999)
     (action . (("Play file" . emms-play-file)
                ("Add to Playlist and play (C-u clear current)"
                 . (lambda (candidate)
@@ -8987,6 +9000,7 @@ Only math* symbols are collected."
     (action
      ("Show package description" . anything-c-apt-cache-show)
      ("Install package" . anything-c-apt-install)
+     ("Reinstall package" . anything-c-apt-reinstall)
      ("Remove package" . anything-c-apt-uninstall)
      ("Purge package" . anything-c-apt-purge))
     (persistent-action . anything-c-apt-persistent-action)
@@ -9063,6 +9077,10 @@ If a buffer named COMMAND already exists, just switch to it."
   "Run 'apt-get install' shell command on PACKAGE."
   (anything-c-apt-generic-action :action 'install))
 
+(defun anything-c-apt-reinstall (package)
+  "Run 'apt-get install --reinstall' shell command on PACKAGE."
+  (anything-c-apt-generic-action :action 'reinstall))
+
 (defun anything-c-apt-uninstall (package)
   "Run 'apt-get remove' shell command on PACKAGE."
   (anything-c-apt-generic-action :action 'uninstall))
@@ -9078,6 +9096,7 @@ Support install, remove and purge actions."
   (term-line-mode)
   (let ((command   (case action
                      ('install   "sudo apt-get install ")
+                     ('reinstall "sudo apt-get install --reinstall ")
                      ('uninstall "sudo apt-get remove ")
                      ('purge     "sudo apt-get purge ")
                      (t          (error "Unknow action"))))
@@ -11634,25 +11653,23 @@ First call open the kill-ring browser, next calls move to next line."
 ;;; Converted from anything-show-*-only
 ;;;###autoload
 (defun anything-for-buffers ()
-  "Preconfigured `anything' for buffer."
+  "Preconfigured `anything' for buffers."
   (interactive)
   (anything-other-buffer 'anything-c-source-buffers "*anything for buffers*"))
 
 ;;;###autoload
 (defun anything-buffers-list ()
-  "Enhanced preconfigured `anything' for buffer."
+  "Preconfigured `anything' to list buffers.
+It is an enhanced version of `anything-for-buffers'."
   (interactive)
   (anything :sources '(anything-c-source-buffers-list
                        anything-c-source-buffer-not-found)
             :buffer "*anything buffers*" :keymap anything-c-buffer-map))
-;;;###autoload
-(defun anything-buffers+ ()
-  "Enhanced preconfigured `anything' for buffer."
-  (interactive)
-  (anything :sources '(anything-c-source-buffers-list
-                       anything-c-source-buffer-not-found)
-            :buffer "*anything buffers*" :keymap anything-c-buffer-map))
-;;(defalias 'anything-buffers+ 'anything-buffer-list)
+
+(defalias 'anything-buffers+ 'anything-buffers-list
+  "Preconfigured `anything' to list buffers.
+It is an alias of `anything-buffers-list'.")
+
 ;;;###autoload
 (defun anything-bbdb ()
   "Preconfigured `anything' for BBDB.
@@ -11963,6 +11980,23 @@ See also `anything-do-grep-1'."
                             (buffer-file-name (current-buffer))))))
     (anything-ff-zgrep-1 ls prefarg)))
 
+;;;###autoload
+(defun anything-do-pdfgrep ()
+  "Preconfigured anything for pdfgrep."
+  (interactive)
+  (let ((only (anything-c-read-file-name
+               "Search in file(s): "
+               :marked-candidates t
+               :test #'(lambda (file)
+                         (or (string= (file-name-extension file) "pdf")
+                             (string= (file-name-extension file) "PDF")
+                             (file-directory-p file)))
+               :preselect (or (dired-get-filename nil t)
+                              (buffer-file-name (current-buffer)))))
+        (anything-c-grep-default-function 'anything-c-pdfgrep-init))
+    (anything-do-pdfgrep-1 only)))
+
+;;;###autoload
 (defun anything-c-etags-select (arg)
   "Preconfigured anything for etags.
 Called with one prefix arg use symbol at point as initial input.
@@ -12393,28 +12427,10 @@ You can set your own list of commands with
 
 ;;; Unit tests are now in ../developer-tools/unit-test-anything-config.el.
 
-
 (provide 'anything-config)
 
-;;; Local Variables:
-;;; time-stamp-format: "%:y-%02m-%02d %02H:%02M:%02S (%Z) %u"
-;;; End:
+;; Local Variables:
+;; coding: utf-8
+;; End:
 
-;; How to save (DO NOT REMOVE!!)
-;; (progn (magit-push) (emacswiki-post "anything-config.el"))
 ;;; anything-config.el ends here
-
-;;; LocalWords:  Tassilo Patrovics Vagn Johansen Dahl Clementson infos
-;;; LocalWords:  Kamphausen informations McBrayer Volpiatto bbdb bb
-;;; LocalWords:  iswitchb imenu Recentf sym samewindow pos bol eol
-;;; LocalWords:  aif str lst func attrib recentf lessp prin mapatoms commandp
-;;; LocalWords:  cmd stb Picklist picklist mapcan subentry destructuring dirs
-;;; LocalWords:  darwin locat MacOS mdfind Firstname Lastname calc prepend jids
-;;; LocalWords:  dotimes Thierry online vname
-;;; LocalWords:  csharp javascript lua makefile cperl zcat lineno buf
-;;; LocalWords:  multiline href fn cand NewTitle cwd filepath thru ret
-;;; LocalWords:  bfn fOpen UNC cygdrive nt xdg macos FILE's elc rx svn hg
-;;; LocalWords:  CANDIDATE's darcs facep pathname args pathnames subseq priorty
-;;; LocalWords:  Vokes rfind berkeley JST ffap lacarte bos
-;;; LocalWords:  Lacarte Minibuf epp LaCarte bm attrset migemo attr conf mklist
-;;; LocalWords:  startpos noselect dont desc
