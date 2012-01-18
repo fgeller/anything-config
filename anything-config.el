@@ -101,6 +101,8 @@
 ;; The help function for etags.
 ;; `anything-c-ucs-help'
 ;; Help command for `anything-ucs'.
+;; `anything-c-bookmark-help'
+;; Help command for bookmarks.
 ;; `anything-show-this-source-only'
 ;; Show all candidates of this source.
 ;; `anything-test-sources'
@@ -219,8 +221,12 @@
 ;; Run grep save results action from `anything-do-grep-1'.
 ;; `anything-yank-text-at-point'
 ;; Yank text at point in minibuffer.
-;; `anything-c-describe-attributes'
-;; Display the full documentation of ANYTHING-ATTRIBUTE (a symbol).
+;; `anything-c-bookmark-run-jump-other-window'
+;; Jump to bookmark from keyboard.
+;; `anything-c-bookmark-run-delete'
+;; Delete bookmark from keyboard.
+;; `anything-c-bmkext-run-edit'
+;; Run `bmkext-edit-bookmark' from keyboard.
 ;; `anything-yaoddmuse-cache-pages'
 ;; Fetch the list of files on emacswiki and create cache file.
 ;; `anything-eval-new-line-and-indent'
@@ -253,18 +259,14 @@
 ;; Save history information to file given by `anything-c-adaptive-history-file'.
 ;; `anything-c-reset-adaptative-history'
 ;; Delete all `anything-c-adaptive-history' and his file.
-;; `anything-c-toggle-match-plugin'
-;; Toggle anything-match-plugin.
 ;; `anything-mini'
-;; Preconfigured `anything' lightweight version		(buffer -> recentf).
+;; Preconfigured `anything' lightweight version (buffer -> recentf).
 ;; `anything-for-files'
 ;; Preconfigured `anything' for opening files.
 ;; `anything-recentf'
 ;; Preconfigured `anything' for `recentf'.
 ;; `anything-info-at-point'
 ;; Preconfigured `anything' for searching info at point.
-;; `anything-info-emacs'
-;; Preconfigured anything for Emacs manual index.
 ;; `anything-show-kill-ring'
 ;; Preconfigured `anything' for `kill-ring'.
 ;; `anything-minibuffer-history'
@@ -294,7 +296,7 @@
 ;; `anything-bookmarks'
 ;; Preconfigured `anything' for bookmarks.
 ;; `anything-c-pp-bookmarks'
-;; Preconfigured `anything' for bookmarks		(pretty-printed).
+;; Preconfigured `anything' for bookmarks	(pretty-printed).
 ;; `anything-c-insert-latex-math'
 ;; Preconfigured anything for latex math symbols completion.
 ;; `anything-register'
@@ -319,8 +321,6 @@
 ;; Preconfigured anything to browse code.
 ;; `anything-org-headlines'
 ;; Preconfigured anything to show org headlines.
-;; `anything-info-gnus'
-;; Preconfigured anything to browse Gnus Manual.
 ;; `anything-regexp'
 ;; Preconfigured anything to build regexps.
 ;; `anything-c-copy-files-async'
@@ -401,6 +401,8 @@
 ;; Preconfigured anything for `ucs-names' math symbols.
 ;; `anything-c-apropos'
 ;; Preconfigured anything to describe commands, functions, variables and faces.
+;; `anything-xrandr-set'
+;; Not documented.
 
 ;;  * User variables defined here:
 ;; [EVAL] (autodoc-document-lisp-buffer :type 'user-variable :prefix "anything-" :var-value t)
@@ -486,6 +488,10 @@
 ;; Default Value: anything-c-show-info-in-mode-line
 ;; `anything-c-turn-on-show-completion'
 ;; Default Value: t
+;; `anything-c-show-completion-use-special-display'
+;; Default Value: t
+;; `anything-c-show-completion-min-window-height'
+;; Default Value: 7
 ;; `anything-lisp-completion-or-indent-delay'
 ;; Default Value: 0.6
 ;; `anything-c-default-external-file-browser'
@@ -540,55 +546,6 @@
 ;; `anything-c-source-files-in-all-dired'			(Files in all dired buffer.)
 ;; `anything-c-source-filelist'					(FileList)
 ;; `anything-c-source-info-pages'				(Info Pages)
-;; `anything-c-source-info-elisp'				(Info index: elisp)
-;; `anything-c-source-info-cl'					(Info index: cl)
-;; `anything-c-source-info-org'					(Info index: org)
-;; `anything-c-source-info-gnus'				(Info index: Gnus)
-;; `anything-c-source-info-ratpoison'				(Info index: ratpoison)
-;; `anything-c-source-info-zsh'					(Info index: zsh)
-;; `anything-c-source-info-bash'				(Info index: bash)
-;; `anything-c-source-info-coreutils'				(Info index: coreutils)
-;; `anything-c-source-info-fileutils'				(Info index: fileutils)
-;; `anything-c-source-info-find'				(Info index: find)
-;; `anything-c-source-info-sh-utils'				(Info index: sh-utils)
-;; `anything-c-source-info-textutils'				(Info index: textutils)
-;; `anything-c-source-info-libc'				(Info index: libc)
-;; `anything-c-source-info-make'				(Info index: make)
-;; `anything-c-source-info-automake'				(Info index: automake)
-;; `anything-c-source-info-autoconf'				(Info index: autoconf)
-;; `anything-c-source-info-emacs-lisp-intro'			(Info index: emacs-lisp-intro)
-;; `anything-c-source-info-emacs'				(Info index: emacs)
-;; `anything-c-source-info-elib'				(Info index: elib)
-;; `anything-c-source-info-eieio'				(Info index: eieio)
-;; `anything-c-source-info-gauche-refe'				(Info index: gauche)
-;; `anything-c-source-info-guile'				(Info index: guile)
-;; `anything-c-source-info-guile-tut'				(Info index: guile-tut)
-;; `anything-c-source-info-goops'				(Info index: goops)
-;; `anything-c-source-info-screen'				(Info index: screen)
-;; `anything-c-source-info-latex'				(Info index: latex)
-;; `anything-c-source-info-gawk'				(Info index: gawk)
-;; `anything-c-source-info-sed'					(Info index: sed)
-;; `anything-c-source-info-m4'					(Info index: m4)
-;; `anything-c-source-info-wget'				(Info index: wget)
-;; `anything-c-source-info-binutils'				(Info index: binutils)
-;; `anything-c-source-info-as'					(Info index: as)
-;; `anything-c-source-info-bfd'					(Info index: bfd)
-;; `anything-c-source-info-gprof'				(Info index: gprof)
-;; `anything-c-source-info-ld'					(Info index: ld)
-;; `anything-c-source-info-diff'				(Info index: diff)
-;; `anything-c-source-info-flex'				(Info index: flex)
-;; `anything-c-source-info-grep'				(Info index: grep)
-;; `anything-c-source-info-gzip'				(Info index: gzip)
-;; `anything-c-source-info-libtool'				(Info index: libtool)
-;; `anything-c-source-info-texinfo'				(Info index: texinfo)
-;; `anything-c-source-info-info'				(Info index: info)
-;; `anything-c-source-info-gdb'					(Info index: gdb)
-;; `anything-c-source-info-stabs'				(Info index: stabs)
-;; `anything-c-source-info-cvsbook'				(Info index: cvsbook)
-;; `anything-c-source-info-cvs'					(Info index: cvs)
-;; `anything-c-source-info-bison'				(Info index: bison)
-;; `anything-c-source-info-id-utils'				(Info index: id-utils)
-;; `anything-c-source-info-global'				(Info index: global)
 ;; `anything-c-source-man-pages'				(Manual Pages)
 ;; `anything-c-source-complex-command-history'			(Complex Command History)
 ;; `anything-c-source-extended-command-history'			(Emacs Commands History)
@@ -1598,7 +1555,7 @@ automatically.")
     ;; as we don't use recursivity for buffers.
     ;; So use zgrep for both as it is capable to handle non--compressed files.
     (define-key map (kbd "M-g s")     'anything-buffer-run-zgrep)
-    (define-key map (kbd "C-o")       'anything-buffer-switch-other-window)
+    (define-key map (kbd "C-c o")     'anything-buffer-switch-other-window)
     (define-key map (kbd "C-c C-o")   'anything-buffer-switch-other-frame)
     (define-key map (kbd "C-c =")     'anything-buffer-run-ediff)
     (define-key map (kbd "M-=")       'anything-buffer-run-ediff-merge)
@@ -1634,7 +1591,7 @@ automatically.")
     (define-key map (kbd "C-d")           'anything-ff-persistent-delete)
     (define-key map (kbd "M-e")           'anything-ff-run-switch-to-eshell)
     (define-key map (kbd "<M-tab>")       'anything-ff-run-complete-fn-at-point)
-    (define-key map (kbd "C-o")           'anything-ff-run-switch-other-window)
+    (define-key map (kbd "C-c o")         'anything-ff-run-switch-other-window)
     (define-key map (kbd "C-c C-o")       'anything-ff-run-switch-other-frame)
     (define-key map (kbd "C-c C-x")       'anything-ff-run-open-file-externally)
     (define-key map (kbd "M-!")           'anything-ff-run-eshell-command-on-file)
@@ -1688,7 +1645,7 @@ automatically.")
     (define-key map (kbd "M-D")     'anything-ff-run-delete-file)
     (define-key map (kbd "C-=")     'anything-ff-run-ediff-file)
     (define-key map (kbd "C-c =")   'anything-ff-run-ediff-merge-file)
-    (define-key map (kbd "C-o")     'anything-ff-run-switch-other-window)
+    (define-key map (kbd "C-c o")   'anything-ff-run-switch-other-window)
     (define-key map (kbd "M-i")     'anything-ff-properties-persistent)
     (define-key map (kbd "C-c C-x") 'anything-ff-run-open-file-externally)
     (define-key map (kbd "C-w")     'anything-yank-text-at-point)
@@ -1700,7 +1657,7 @@ automatically.")
   (let ((map (copy-keymap anything-map)))
     (define-key map (kbd "M-<down>") 'anything-c-goto-next-file)
     (define-key map (kbd "M-<up>")   'anything-c-goto-precedent-file)
-    (define-key map (kbd "C-o")      'anything-c-grep-run-other-window-action)
+    (define-key map (kbd "C-c o")    'anything-c-grep-run-other-window-action)
     (define-key map (kbd "C-w")      'anything-yank-text-at-point)
     (define-key map (kbd "C-x C-s")  'anything-c-grep-run-save-buffer)
     (when anything-c-grep-use-ioccur-style-keys
@@ -1750,6 +1707,16 @@ automatically.")
     (define-key map (kbd "C-c ?")         'anything-c-ucs-help)
     map)
   "Keymap for `anything-ucs'.")
+
+(defvar anything-c-bookmark-map
+  (let ((map (copy-keymap anything-map)))
+    (define-key map (kbd "C-c o") 'anything-c-bookmark-run-jump-other-window)
+    (define-key map (kbd "C-d")   'anything-c-bookmark-run-delete)
+    (when (locate-library "bookmark-extensions")
+      (define-key map (kbd "M-e") 'anything-c-bmkext-run-edit))
+    (define-key map (kbd "C-c ?") 'anything-c-bookmark-help)
+    (delq nil map))
+  "Generic Keymap for emacs bookmark sources.")
 
 
 
@@ -2078,6 +2045,27 @@ See Man locate for more infos.
   (let ((anything-help-message anything-c-ucs-help-message))
     (anything-help)))
 
+;;; Bookmark help
+;;
+;;
+(defvar anything-bookmark-help-message
+  "== Anything bookmark name Map ==\
+\nSpecific commands for bookmarks:
+\\<anything-c-bookmark-map>
+\\[anything-c-bookmark-run-jump-other-window]\t\t->Jump other window.
+\\[anything-c-bookmark-run-delete]\t\t->Delete bookmark.
+\\[anything-c-bmkext-run-edit]\t\t->Edit bookmark (only for bmkext).
+\\[anything-c-bookmark-help]\t\t->Run this help.
+\n== Anything Map ==
+\\{anything-map}")
+
+(defun anything-c-bookmark-help ()
+  "Help command for bookmarks."
+  (interactive)
+  (let ((anything-help-message anything-bookmark-help-message))
+    (anything-help)))
+
+
 
 ;;; Mode line strings
 ;;
@@ -2162,6 +2150,17 @@ See Man locate for more infos.
 \\[anything-select-3rd-action]:NthAct."
   "String displayed in mode-line in `anything-ucs'.")
 
+(defvar anything-bookmark-mode-line-string
+  '("Bookmark(s)"
+    "\\<anything-c-bookmark-map>\
+\\[anything-c-bookmark-help]:Help, \
+\\<anything-map>\
+\\[anything-select-action]:Acts,\
+\\[anything-exit-minibuffer]/\\[anything-select-2nd-action-or-end-of-line]/\
+\\[anything-select-3rd-action]:NthAct,\
+\\[anything-send-bug-report-from-anything]:BugReport."
+    "String displayed in mode-line in `anything-c-source-buffers-list'"))
+
 
 
 ;;; Utilities Functions
@@ -2219,21 +2218,22 @@ Default is `anything-current-buffer'."
     (require 'org) ; On some old Emacs versions org may not be loaded.
     (org-reveal)))
 
-(defun anything-goto-line (lineno)
+(defun anything-goto-line (lineno &optional noanim)
   "Goto LINENO opening only outline headline if needed.
-Animation is used."
+Animation is used unless NOANIM is non--nil."
   (goto-char (point-min))
   (anything-goto-char (point-at-bol lineno))
-  (anything-match-line-color-current-line)
-  (sit-for 0.3)
-  (anything-match-line-cleanup))
+  (unless noanim
+    (anything-match-line-color-current-line)
+    (sit-for 0.3)
+    (anything-match-line-cleanup)))
 
 (defun anything-show-this-source-only ()
   "Show all candidates of this source."
   (interactive)
-  (setq anything-candidate-number-limit nil)
-  (anything-set-source-filter
-   (list (assoc-default 'name (anything-get-current-source)))))
+  (let (anything-candidate-number-limit)
+    (anything-set-source-filter
+     (list (assoc-default 'name (anything-get-current-source))))))
 
 ;;;###autoload
 (defun anything-test-sources ()
@@ -2277,11 +2277,9 @@ The output is sexps which are evaluated by \\[eval-last-sexp]."
         (anything-set-source-filter (list it))
       (anything-set-source-filter nil))))
 
-;; Same as anything-set-pattern but bad written, please fix.
 (defun anything-insert-string (str)
   "Insert STR."
-  (delete-minibuffer-contents)
-  (insert str))
+  (anything-set-pattern str 'noupdate))
 
 ;;;###autoload
 (defun anything-insert-buffer-name ()
@@ -4038,7 +4036,8 @@ in `anything-ff-history'."
             (anything-c-delete-file candidate)
             (save-selected-window
               (when (y-or-n-p (format "Really Delete file `%s'? " candidate))
-                (anything-c-delete-file candidate))))
+                (anything-c-delete-file candidate)
+                (message nil))))
         (anything-force-update presel))))
 
 (defun anything-ff-kill-buffer-fname (candidate)
@@ -4849,9 +4848,11 @@ Keys description:
               (candidates
                . (lambda ()
                    (if test
-                       (loop for i in (anything-find-files-get-candidates
+                       (loop with hn = (anything-ff-tramp-hostnames)
+                             for i in (anything-find-files-get-candidates
                                        must-match)
-                             when (funcall test i) collect i)
+                             when (or (member i hn) (funcall test i))
+                             collect i)
                        (anything-find-files-get-candidates must-match))))
               (filtered-candidate-transformer anything-c-find-files-transformer)
               (persistent-action . ,persistent-action)
@@ -5280,13 +5281,16 @@ If it's empty --exclude `grep-find-ignored-files' is used instead."
                                             default-directory))
     (anything
      :sources
-     `(((name . "Grep (C-c ? Help)")
+     `(((name . "Grep")
+        (header-name . (lambda (name)
+                         (concat name "(C-c ? Help)")))
         (candidates
          . (lambda ()
              (funcall anything-c-grep-default-function only include-files zgrep)))
         (filtered-candidate-transformer anything-c-grep-cand-transformer)
         (candidate-number-limit . 9999)
         (mode-line . anything-grep-mode-line-string)
+        (keymap . ,anything-c-grep-map)
         (action . ,(delq
                     nil
                     `(("Find File" . anything-c-grep-action)
@@ -5300,7 +5304,6 @@ If it's empty --exclude `grep-find-ignored-files' is used instead."
         (persistent-help . "Jump to line (`C-u' Record in mark ring)")
         (requires-pattern . 3)
         (delayed)))
-     :keymap anything-c-grep-map
      :buffer "*anything grep*")))
 
 (defun anything-ff-zgrep-1 (flist recursive)
@@ -5635,26 +5638,23 @@ Set `recentf-max-saved-items' to a bigger value if default is too small.")
                    (looking-at ":\\([0-9]+\\)"))
           (cons it (string-to-number (match-string 1)))))))
 
-(defvar anything-c-ffap-line-location nil
-  "(FILENAME . LINENO) used by `anything-c-source-ffap-line'.
-It is cleared after jumping line.")
-
 (defun anything-c-ffap-line-candidates ()
   (with-anything-current-buffer
-    (setq anything-c-ffap-line-location (anything-c-ffap-file-line-at-point)))
-  (when anything-c-ffap-line-location
-    (destructuring-bind (file . line) anything-c-ffap-line-location
+    (anything-attrset 'ffap-line-location (anything-c-ffap-file-line-at-point)))
+  (anything-aif (anything-attr 'ffap-line-location)
+    (destructuring-bind (file . line) it
       (list (cons (format "%s (line %d)" file line) file)))))
 
 ;;; Goto line after opening file by `anything-c-source-ffap-line'.
 (defun anything-c-ffap-line-goto-line ()
-  (when (car anything-c-ffap-line-location)
+  (when (car (anything-attr 'ffap-line-location))
     (unwind-protect
-         (ignore-errors
-           (with-selected-window
-               (get-buffer-window
-                (get-file-buffer (car anything-c-ffap-line-location)))
-             (anything-goto-line (cdr anything-c-ffap-line-location)))))))
+        (ignore-errors
+          (with-selected-window
+              (get-buffer-window
+               (get-file-buffer (car (anything-attr 'ffap-line-location))))
+            (anything-goto-line (cdr (anything-attr 'ffap-line-location)))))
+      (anything-attrset 'ffap-line-location nil))))
 (add-hook 'anything-after-action-hook 'anything-c-ffap-line-goto-line)
 (add-hook 'anything-after-persistent-action-hook 'anything-c-ffap-line-goto-line)
 
@@ -6078,7 +6078,6 @@ http://www.emacswiki.org/cgi-bin/wiki/download/lacarte.el")
     (init . (lambda ()
               (require 'bookmark)))
     (candidates . bookmark-all-names)
-    (keymap . ,anything-map)
     (type . bookmark))
   "See (info \"(emacs)Bookmarks\").")
 
@@ -6228,6 +6227,23 @@ Work both with standard Emacs bookmarks and bookmark-extensions.el."
                        t
                        (propertize i 'face 'anything-bmkext-file 'help-echo isfile)))))
 
+(defun anything-c-bookmark-jump (candidate)
+  "Jump to bookmark from keyboard."
+  (let ((current-prefix-arg anything-current-prefix-arg))
+    (bookmark-jump candidate)))
+
+;;;###autoload
+(defun anything-c-bookmark-run-jump-other-window ()
+  "Jump to bookmark from keyboard."
+  (interactive)
+  (anything-c-quit-and-execute-action 'bookmark-jump-other-window))
+
+;;;###autoload
+(defun anything-c-bookmark-run-delete ()
+  "Delete bookmark from keyboard."
+  (interactive)
+  (when (y-or-n-p "Delete bookmark?")
+    (anything-c-quit-and-execute-action 'anything-delete-marked-bookmarks)))
 
 
 ;;; Sources to filter bookmark-extensions bookmarks.
@@ -6248,6 +6264,12 @@ Work both with standard Emacs bookmarks and bookmark-extensions.el."
         for b = (car i)
         collect b into sa
         finally return (sort sa 'string-lessp)))
+
+;;;###autoload
+(defun anything-c-bmkext-run-edit ()
+  "Run `bmkext-edit-bookmark' from keyboard."
+  (interactive)
+  (anything-c-quit-and-execute-action 'bmkext-edit-bookmark))
 
 ;;; Addressbook.
 ;;
@@ -6492,6 +6514,7 @@ Work both with standard Emacs bookmarks and bookmark-extensions.el."
 ;; user_pref("browser.bookmarks.autoExportHTML", false);
 ;; You should have now:
 ;; user_pref("browser.bookmarks.autoExportHTML", true);
+;; NOTE: This is also working in the same way for mozilla aka seamonkey.
 
 (defvar anything-firefox-bookmark-url-regexp "\\(https\\|http\\|ftp\\|about\\|file\\)://[^ \"]*")
 (defvar anything-firefox-bookmarks-regexp ">\\([^><]+.[^</a>]\\)")
@@ -6542,13 +6565,9 @@ Work both with standard Emacs bookmarks and bookmark-extensions.el."
     (filtered-candidate-transformer
      anything-c-adaptive-sort
      anything-c-highlight-firefox-bookmarks)
-    (action . (("Browse Url Firefox"
+    (action . (("Browse Url"
                 . (lambda (candidate)
-                    (browse-url-firefox
-                     (anything-c-firefox-bookmarks-get-value candidate))))
-               ("Browse Url w3m"
-                . (lambda (candidate)
-                    (w3m-browse-url
+                    (anything-c-browse-url
                      (anything-c-firefox-bookmarks-get-value candidate))))
                ("Copy Url"
                 . (lambda (elm)
@@ -6600,7 +6619,7 @@ Work both with standard Emacs bookmarks and bookmark-extensions.el."
                ("Copy Url"
                 . (lambda (elm)
                     (kill-new (anything-c-w3m-bookmarks-get-value elm))))
-               ("Browse Url Firefox"
+               ("Browse Url Externally"
                 . (lambda (candidate)
                     (anything-c-w3m-browse-bookmark candidate t)))
                ("Delete Bookmark"
@@ -6625,8 +6644,8 @@ http://emacs-w3m.namazu.org/")
   (replace-regexp-in-string
    "\"" "" (cdr (assoc elm anything-c-w3m-bookmarks-alist))))
 
-(defun anything-c-w3m-browse-bookmark (elm &optional use-firefox new-tab)
-  (let* ((fn (if use-firefox 'browse-url-firefox 'w3m-browse-url))
+(defun anything-c-w3m-browse-bookmark (elm &optional use-external new-tab)
+  (let* ((fn  (if use-external 'anything-c-browse-url 'w3m-browse-url))
          (arg (and (eq fn 'w3m-browse-url) new-tab)))
     (funcall fn (anything-c-w3m-bookmarks-get-value elm) arg)))
 
@@ -8284,11 +8303,11 @@ Return an alist with elements like (data . number_results)."
         (apply default-browser-fn url args)
         (error "No usable browser found"))))
 
-(defun* anything-c-browse-url (&optional (url anything-c-home-url))
+(defun anything-c-browse-url (url &rest args)
   "Default command to browse URL."
   (if browse-url-browser-function
-      (browse-url url)
-      (anything-browse-url-default-browser url)))
+      (browse-url url args)
+      (anything-browse-url-default-browser url args)))
 
 
 ;;; Surfraw
@@ -9881,28 +9900,37 @@ This is the same as `ac-insert', just inlined here for compatibility."
            (pcomplete-autolist pcomplete-autolist)
            (pcomplete-suffix-list pcomplete-suffix-list))
       (with-anything-current-buffer
-        (loop
-              with table  = (pcomplete-completions)
+        (loop with table  = (pcomplete-completions)
               with entry  = (condition-case nil
-                                ;; For Emacs24
-                                (try-completion anything-pattern (pcomplete-entries))
-                              ;; Fall back to this in Emacs23 as pcomplete-entries seem broken.
+                                ;; On Emacs24 `try-completion' return
+                                ;; pattern when more than one result.
+                                ;; Otherwise Emacs23 return nil, which
+                                ;; is wrong, in this case use pattern
+                                ;; to behave like Emacs24.
+                                (or (try-completion anything-pattern
+                                                    (pcomplete-entries))
+                                    anything-pattern)
+                              ;; In Emacs23 `pcomplete-entries' may fail
+                              ;; with error, so try this instead.
                               (error
                                nil
-                               (let ((fc (car (last (pcomplete-parse-arguments)))))
+                               (let ((fc (car (last
+                                               (pcomplete-parse-arguments)))))
                                  ;; Check if last arg require fname completion.
                                  (and (file-name-directory fc) fc))))
-              for i in (if (listp table) table                     ; Emacs23 or commands.
-                           (all-completions pcomplete-stub table)) ; Emacs24
+              for i in (all-completions pcomplete-stub table)
               for file-cand = (and entry
                                    (if (file-remote-p i) i
-                                       (expand-file-name i (file-name-directory entry))))
-              if (and file-cand (or (file-remote-p file-cand) (file-exists-p file-cand)))
+                                       (expand-file-name
+                                        i (file-name-directory entry))))
+              if (and file-cand (or (file-remote-p file-cand)
+                                    (file-exists-p file-cand)))
               collect file-cand into ls
               else collect i into ls
               finally return
               (if (and entry (not (string= entry "")) (file-exists-p entry))
-                  (append (list (expand-file-name entry default-directory)) ls) ls))))))
+                  (append (list (expand-file-name entry default-directory)) ls)
+                  ls))))))
 
 ;;; Eshell history.
 ;;
@@ -10774,21 +10802,24 @@ displayed with the `file-name-shadow' face if available."
   "Change undesirable features of windows pathnames to ones more acceptable to
 other candidate transformers."
   (if (eq system-type 'windows-nt)
-      (mapcar (lambda (x)
-                (replace-regexp-in-string "/cygdrive/\\(.\\)" "\\1:" x))
-              (mapcar (lambda (y)
-                        (replace-regexp-in-string "\\\\" "/" y)) args))
-      args))
+      (anything-transform-mapcar
+       (lambda (x)
+         (replace-regexp-in-string
+          "/cygdrive/\\(.\\)" "\\1:"
+          (replace-regexp-in-string "\\\\" "/" x)))
+       args)
+    args))
 
 (defun anything-c-shorten-home-path (files)
   "Replaces /home/user with ~."
   (let ((home (replace-regexp-in-string "\\\\" "/" ; stupid Windows...
                                         (getenv "HOME"))))
-    (mapcar (lambda (file)
-              (if (and (stringp file) (string-match home file))
-                  (cons (replace-match "~" nil nil file) file)
-                  file))
-            files)))
+    (anything-transform-mapcar
+     (lambda (file)
+       (if (and (stringp file) (string-match home file))
+           (cons (replace-match "~" nil nil file) file)
+         file))
+     files)))
 
 ;;; Functions
 (defun anything-c-mark-interactive-functions (functions)
@@ -11312,7 +11343,7 @@ with original attribute value.
        ("Query replace" . anything-c-buffer-query-replace)
        ("View buffer" . view-buffer)
        ("Display buffer"   . display-buffer)
-       ("Grep buffers (C-u grep all buffers)" . anything-c-grep-buffers)
+       ("Grep buffers (C-u grep all buffers)" . anything-c-zgrep-buffers)
        ("Revert buffer(s)" . anything-revert-marked-buffers)
        ("Insert buffer" . insert-buffer)
        ("Kill buffer(s)" . anything-kill-marked-buffers)
@@ -11365,8 +11396,6 @@ with original attribute value.
   (define-anything-type-attribute 'command
       `((action ("Call interactively" . anything-c-call-interactively)
                 ,@actions)
-        ;; Sort commands according to their usage count.
-                                        ;(filtered-candidate-transformer . anything-c-adaptive-sort)
         (coerce . anything-c-symbolify)
         (persistent-action . describe-function))
     "Command. (string or symbol)")
@@ -11395,20 +11424,17 @@ with original attribute value.
 (define-anything-type-attribute 'bookmark
     `((coerce . anything-bookmark-get-bookmark-from-name)
       (action
-       ("Jump to bookmark" . (lambda (bookmark)
-                               (let ((current-prefix-arg anything-current-prefix-arg))
-                                 (bookmark-jump bookmark))
-                               (anything-update)))
-       ("Jump to BM other window" . (lambda (bookmark)
-                                      (bookmark-jump-other-window bookmark)
-                                      (anything-update)))
+       ("Jump to bookmark" . anything-c-bookmark-jump)
+       ("Jump to BM other window" . bookmark-jump-other-window)
        ("Bookmark edit annotation" . bookmark-edit-annotation)
        ("Bookmark show annotation" . bookmark-show-annotation)
        ("Delete bookmark(s)" . anything-delete-marked-bookmarks)
        ,@(and (locate-library "bookmark-extensions")
               `(("Edit Bookmark" . bmkext-edit-bookmark)))
        ("Rename bookmark" . bookmark-rename)
-       ("Relocate bookmark" . bookmark-relocate)))
+       ("Relocate bookmark" . bookmark-relocate))
+      (keymap . ,anything-c-bookmark-map)
+      (mode-line . anything-bookmark-mode-line-string))
   "Bookmark name.")
 
 (define-anything-type-attribute 'line
@@ -11874,8 +11900,9 @@ See also `anything-do-grep-1'."
     (anything-do-grep-1 only prefarg)))
 
 ;;;###autoload
-(defun anything-do-zgrep (candidate)
+(defun anything-do-zgrep ()
   "Preconfigured anything for zgrep."
+  (interactive)
   (let ((prefarg (or current-prefix-arg anything-current-prefix-arg))
         (ls (anything-c-read-file-name
              "Search in file(s): "
@@ -12141,7 +12168,7 @@ http://www.emacswiki.org/emacs/download/yaoddmuse.el"
          (browse-url-browser-function (or anything-surfraw-default-browser-function
                                           browse-url-browser-function)))
     (if (string= engine-nodesc "W")
-        (anything-c-browse-url)
+        (anything-c-browse-url anything-c-home-url)
         (anything-c-browse-url url)
         (setq anything-surfraw-engines-history
               (cons engine (delete engine anything-surfraw-engines-history))))))
