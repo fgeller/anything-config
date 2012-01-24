@@ -1718,6 +1718,12 @@ automatically.")
     (delq nil map))
   "Generic Keymap for emacs bookmark sources.")
 
+(defvar anything-esh-on-file-map
+  (let ((map (copy-keymap anything-map)))
+    (define-key map (kbd "C-c ?")    'anything-esh-help)
+    map)
+  "Keymap for `anything-find-files-eshell-command-on-file'.")
+
 
 
 ;;; Embeded documentation.
@@ -2065,6 +2071,47 @@ See Man locate for more infos.
   (let ((anything-help-message anything-bookmark-help-message))
     (anything-help)))
 
+;;; Eshell command on file help
+;;
+;;
+(defvar anything-c-esh-help-message
+  "== Anything eshell on file ==
+\nTips:
+
+- Passing extra args after filename:
+
+Normally your command or alias will be called with file as argument.
+
+e.g <command> 'candidate_file'
+
+But you can also pass an argument or more after 'candidate_file' like this:
+
+<command> %s [extra_args]\n
+
+'candidate_file' will be inserted at '%s' and your command will look at this:
+
+<command> 'candidate_file' [args]
+
+- Specify many files as args (marked files):
+
+e.g <command> file1 file2 ...
+
+Please restart and use a prefix arg to call `anything-find-files-eshell-command-on-file'.
+Otherwise your command will be called many times like this:
+
+<command> file1 <command> file2 etc...
+
+\nSpecific commands for `anything-find-files-eshell-command-on-file':
+\\<anything-esh-on-file-map>
+\\[anything-esh-help]\t\t->Display this help.
+\n== Anything Map ==
+\\{anything-map}")
+
+(defun anything-esh-help ()
+  "Help command for `anything-find-files-eshell-command-on-file'."
+  (interactive)
+  (let ((anything-help-message anything-c-esh-help-message))
+    (anything-help)))
 
 
 ;;; Mode line strings
@@ -2523,6 +2570,9 @@ i.e Don't replace inside a word, regexp is surrounded with \\bregexp\\b."
   (kill-new input)
   (message "Killed: %s" input))
 
+(defun anything-quote-whitespace (candidate)
+  "Quote whitespace, if some, in string CANDIDATE."
+  (replace-regexp-in-string " " "\\\\ " candidate))
 
 
 ;;; Toggle all marks.
@@ -3231,27 +3281,39 @@ will not be loaded first time you use this."
                            finally return (sort ls 'string<))
                      :buffer "*esh command on file*"
                      :name "Eshell command"
+                     :keymap anything-esh-on-file-map
+                     :mode-line
+                     '("Eshell alias"
+                       "C-c ?: Help, \\[universal-argument]: Insert output at point")
                      :input-history
                      'anything-eshell-command-on-file-input-history))
            (com-value (car (assoc-default command eshell-command-aliases-list))))
+      ;; Be sure output don't go in current buffer
+      ;; but allow sending output to current buffer
+      ;; if a prefix arg have been passed during the
+      ;; `anything-comp-read' call.
+      (setq current-prefix-arg anything-current-prefix-arg)
+      ;; MAP have been set before calling `anything-comp-read' 
+      ;; by `anything-current-prefix-arg'.
       (if (and (or map (and com-value (string-match "\\$\\*$" com-value)))
                (> (length cand-list) 1))
           ;; Run eshell-command with ALL marked files as arguments.
           (let ((mapfiles (mapconcat 'shell-quote-argument cand-list " ")))
-            (eshell-command (format "%s %s" command mapfiles)))
+            (if (string-match "'%s'\\|\"%s\"\\|%s" command)
+                (eshell-command (format command mapfiles)) ; See [1]
+                (eshell-command (format "%s %s" command mapfiles))))
           ;; Run eshell-command on EACH marked files.
-          (loop
-                for i in cand-list
+          (loop for i in cand-list
                 for bn = (anything-c-basename i)
                 for files = (if (and bn (string-match "^\*" bn))
-                                ;; Assume if fname is a wildcard
+                                ;; Assume that if fname is a wildcard
                                 ;; cand-list have a length of 1.
                                 (mapconcat
                                  'shell-quote-argument
                                  (file-expand-wildcards i t) " ")
                                 (format "'%s'" i))
                 for com = (if (string-match "'%s'\\|\"%s\"\\|%s" command)
-                              ;; This allow to enter other args AFTER filename
+                              ;; [1] This allow to enter other args AFTER filename
                               ;; i.e <command %s some_more_args>
                               (format command files)
                               (format "%s %s" command files))
@@ -3704,14 +3766,13 @@ This happen after using `anything-find-files-down-one-level',
 or hitting C-z on \"..\"."
   (when (and anything-ff-last-expanded
              (anything-file-completion-source-p))
-    (let ((dirname (if anything-ff-transformer-show-only-basename
+    (let ((presel (if anything-ff-transformer-show-only-basename
                        (anything-c-basename
                         (directory-file-name anything-ff-last-expanded))
                        (directory-file-name anything-ff-last-expanded))))
       (with-anything-window
-        (when (or (re-search-forward (concat dirname "$") nil t)
-                  (re-search-forward
-                   (concat anything-ff-last-expanded "$") nil t))
+        (when (re-search-forward
+               (concat "^" (regexp-quote presel) "$") nil t)
           (forward-line 0)
           (anything-mark-current-line)))
       (setq anything-ff-last-expanded nil))))
@@ -9378,6 +9439,8 @@ Do nothing, just return candidate list unmodified."
                                    input-history
                                    (persistent-action nil)
                                    (persistent-help "DoNothing")
+                                   (mode-line anything-mode-line-string)
+                                   (keymap anything-map)
                                    (name "Anything Completions")
                                    candidates-in-buffer
                                    exec-when-only-one
@@ -9467,8 +9530,8 @@ that use `anything-comp-read' See `anything-M-x' for example."
                                map)))
            (anything-map (if must-match-map
                              (make-composed-keymap
-                              must-match-map anything-map)
-                             anything-map))
+                              must-match-map (or keymap anything-map))
+                             (or keymap anything-map)))
            (src-hist `((name . ,(format "%s History" name))
                        (candidates
                         . (lambda ()
@@ -9489,6 +9552,8 @@ that use `anything-comp-read' See `anything-M-x' for example."
                                   collect i)))
                        (persistent-action . ,persistent-action)
                        (persistent-help . ,persistent-help)
+                       (mode-line . ,mode-line)
+                       (keymap . ,anything-map)
                        (action . ,'action-fn)))
            (src `((name . ,name)
                   (candidates
@@ -9504,6 +9569,8 @@ that use `anything-comp-read' See `anything-M-x' for example."
                   (requires-pattern . ,requires-pattern)
                   (persistent-action . ,persistent-action)
                   (persistent-help . ,persistent-help)
+                  (mode-line . ,mode-line)
+                  (keymap . ,anything-map)
                   (action . ,'action-fn)))
            (src-1 `((name . ,name)
                     (init
@@ -9523,6 +9590,8 @@ that use `anything-comp-read' See `anything-M-x' for example."
                     (requires-pattern . ,requires-pattern)
                     (persistent-action . ,persistent-action)
                     (persistent-help . ,persistent-help)
+                    (mode-line . ,mode-line)
+                    (keymap . ,anything-map)
                     (action . ,'action-fn)))
            (src-list (list src-hist
                            (if candidates-in-buffer
@@ -9641,7 +9710,9 @@ It should be used when candidate list don't need to rebuild dynamically."
      ;; If DEF is not provided, fallback to empty string
      ;; to avoid `thing-at-point' to be appended on top of list
      :default (or default "")
-     :initial-input init)))
+     ;; Use `regexp-quote' to fix initial input
+     ;; with special characters (e.g nnimap+gmail:)
+     :initial-input (and (stringp init) (regexp-quote init)))))
 
 (defun anything-completing-read-with-cands-in-buffer
     (prompt collection test require-match
@@ -9882,14 +9953,15 @@ Note: This mode will work only partially on Emacs23."
 ;; Internal.
 (defvar anything-ec-target "")
 (defun anything-ec-insert (candidate)
-  "Insert CANDIDATE at point.
+  "Replace text at point with CANDIDATE.
+The function that call this should set `anything-ec-target' to thing at point.
 This is the same as `ac-insert', just inlined here for compatibility."
   (let ((pt (point)))
     (when (and anything-ec-target
                (search-backward anything-ec-target nil t)
                (string= (buffer-substring (point) pt) anything-ec-target))
       (delete-region (point) pt)))
-  (insert candidate))
+  (insert (anything-quote-whitespace candidate)))
 
 (defun anything-esh-get-candidates ()
   "Get candidates for eshell completion using `pcomplete'."
