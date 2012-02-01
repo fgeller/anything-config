@@ -1729,6 +1729,24 @@ automatically.")
     map)
   "Keymap for `anything-find-files-eshell-command-on-file'.")
 
+(defvar anything-eshell-history-map
+  (let ((map (copy-keymap anything-map)))
+    (define-key map (kbd "M-p") 'anything-next-line)
+    map)
+  "Keymap for `anything-eshell-history'.")
+
+(defvar anything-kill-ring-map
+  (let ((map (copy-keymap anything-map)))
+    (define-key map (kbd "M-y") 'anything-next-line)
+    (define-key map (kbd "M-u") 'anything-previous-line)
+    map)
+  "Keymap for `anything-show-kill-ring'.")
+
+(defvar anything-occur-map
+  (let ((map (copy-keymap anything-map)))
+    (define-key map (kbd "C-M-%") 'anything-occur-run-query-replace-regexp)
+    map)
+  "Keymap for `anything-occur'.")
 
 
 ;;; Embeded documentation.
@@ -2235,10 +2253,20 @@ Otherwise your command will be called many times like this:
   (with-no-warnings
     (switch-to-buffer buffer-or-name)))
 
-(defsubst* anything-c-position (item seq &key (test 'eq))
-  "A simple and faster replacement of CL `position'."
-  (loop for i in seq for index from 0
-        when (funcall test i item) return index))
+(defun* anything-c-position (item seq &key (test 'eq) all)
+  "A simple and faster replacement of CL `position'.
+Return position of first occurence of ITEM found in SEQ.
+Argument SEQ can be a string, in this case ITEM have to be a char.
+Argument ALL, if non--nil specify to return a list of positions of
+all ITEM found in SEQ."
+  (let ((key (if (stringp seq) 'across 'in)))
+    (eval
+     `(loop for c ,key seq
+            for index from 0
+            when (funcall test c item)
+            if all collect index into ls
+            else return index
+            finally return ls))))
 
 (defun anything-c-get-pid-from-process-name (process-name)
   "Get pid from running process PROCESS-NAME."
@@ -3897,7 +3925,7 @@ purpose."
     (let ((method      (match-string 1 pattern))
           (tn          (match-string 0 pattern))
           (all-methods (mapcar 'car tramp-methods)))
-      (remove-duplicates
+      (anything-fast-remove-dups
        (loop for (f . h) in (tramp-get-completion-function method)
              append (loop for e in (funcall f (car h))
                           for host = (and (consp e) (cadr e))
@@ -4501,7 +4529,8 @@ Use it for non--interactive calls of `anything-find-files'."
 
 (defun anything-find-files-initial-input (&optional input)
   "Return INPUT if present, otherwise try to guess it."
-  (or (and input (expand-file-name input))
+  (or (and input (or (and (file-remote-p input) input)
+                     (expand-file-name input)))
       (anything-find-files-input
        (ffap-guesser)
        (thing-at-point 'filename))))
@@ -4511,13 +4540,17 @@ Use it for non--interactive calls of `anything-find-files'."
   (let* ((def-dir (anything-c-current-directory))
          (lib     (anything-find-library-at-point))
          (url     (anything-ff-find-url-at-point))
-         (file-p  (and fap (not (string= fap ""))
+         (remp    (and fap (file-remote-p fap)))
+         (file-p  (and (not remp)
+                       fap
+                       (not (string= fap ""))
                        (file-exists-p fap)
                        tap (not (string= tap ""))
                        (file-exists-p
                         (file-name-directory (expand-file-name tap def-dir))))))
     (cond (lib) ; e.g we are inside a require sexp.
           (url) ; String at point is an hyperlink.
+          (remp fap)
           (file-p (expand-file-name tap def-dir))
           (t (and (not (string= fap "")) fap)))))
 
@@ -5123,7 +5156,7 @@ See `anything-c-grep-default-command' for format specs.")
   ;; of this candidate (e.g /home/user/directory/*).
   ;; If r option is enabled search also in subdidrectories.
   ;; We need here to expand wildcards to support crap windows filenames
-  ;; as grep don't accept quoted wildcards (e.g "dir/*.el").
+  ;; as grep doesn't accept quoted wildcards (e.g "dir/*.el").
   (if anything-c-zgrep-recurse-flag
       (mapconcat 'shell-quote-argument candidates " ")
       (loop for i in candidates append
@@ -5169,7 +5202,7 @@ See `anything-c-grep-default-command' for format specs.")
                              (concat "--exclude=" (shell-quote-argument x)))
                          grep-find-ignored-files " "))
          (ignored-dirs  (mapconcat
-                         ;; Need grep version 2.5.4 of Gnuwin32 on windoze.
+                         ;; Need grep version >=2.5.4 of Gnuwin32 on windoze.
                          #'(lambda (x)
                              (concat "--exclude-dir=" (shell-quote-argument x)))
                          grep-find-ignored-directories " "))
@@ -7386,11 +7419,12 @@ utility mdfind.")
 ;;
 ;;
 (defvar anything-c-source-kill-ring
-  '((name . "Kill Ring")
+  `((name . "Kill Ring")
     (init . (lambda () (anything-attrset 'last-command last-command)))
     (candidates . anything-c-kill-ring-candidates)
     (filtered-candidate-transformer anything-c-kill-ring-transformer)
     (action . anything-c-kill-ring-action)
+    (keymap . ,anything-kill-ring-map)
     (last-command)
     (migemo)
     (multiline))
@@ -8632,8 +8666,14 @@ i.e Don't replace inside a word, regexp is surrounded with \\bregexp\\b."
     (apply 'query-replace-regexp
            (anything-c-query-replace-args regexp))))
 
+(defun anything-occur-run-query-replace-regexp ()
+  "Run `query-replace-regexp' in anything occur from keymap."
+  (interactive)
+  (anything-c-quit-and-execute-action
+   'anything-c-occur-query-replace-regexp))
+
 (defvar anything-c-source-occur
-  '((name . "Occur")
+  `((name . "Occur")
     (init . anything-c-occur-init)
     (candidates-in-buffer)
     (migemo)
@@ -8643,9 +8683,9 @@ i.e Don't replace inside a word, regexp is surrounded with \\bregexp\\b."
                ("Query replace regexp (C-u Not inside word.)"
                 . anything-c-occur-query-replace-regexp)))
     (recenter)
+    (keymap . ,anything-occur-map)
     (requires-pattern . 1)
-    (delayed)
-    (volatile)))
+    (delayed)))
 
 
 ;;; Anything browse code.
@@ -10019,7 +10059,7 @@ This is the same as `ac-insert', just inlined here for compatibility."
 ;;
 ;;
 (defvar anything-c-source-eshell-history
-  '((name . "Eshell history")
+  `((name . "Eshell history")
     (init . (lambda ()
               (let (eshell-hist-ignoredups)
                 ;; Write the content's of ring to file.
@@ -10029,6 +10069,7 @@ This is the same as `ac-insert', just inlined here for compatibility."
               ;; Same comment as in `anything-c-source-esh'
               (remove-hook 'minibuffer-setup-hook 'eshell-mode)))
     (candidates-in-buffer)
+    (keymap . ,anything-eshell-history-map)
     (filtered-candidate-transformer . (lambda (candidates sources)
                                         (reverse candidates)))
     (candidate-number-limit . 9999)
@@ -11626,13 +11667,8 @@ It is drop-in replacement of `yank-pop'.
 You may bind this command to M-y.
 First call open the kill-ring browser, next calls move to next line."
   (interactive)
-  (let ((buf "*anything kill-ring*"))
-    (if (get-buffer-window buf)
-        (with-anything-window
-          (if (eq (overlay-end anything-selection-overlay) (point-max))
-              (anything-beginning-of-buffer)
-              (anything-next-line)))
-        (anything-other-buffer 'anything-c-source-kill-ring buf))))
+  (anything :sources 'anything-c-source-kill-ring
+            :buffer "*anything kill-ring*"))
 
 ;;;###autoload
 (defun anything-minibuffer-history ()
