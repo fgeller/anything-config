@@ -823,7 +823,7 @@ was called."
   :group 'anything-config)
 
 (defcustom anything-google-suggest-use-curl-p nil
-  "*When non--nil use CURL to get info from `anything-c-google-suggest-url'.
+  "When non--nil use CURL to get info from `anything-c-google-suggest-url'.
 Otherwise `url-retrieve-synchronously' is used."
   :type 'boolean
   :group 'anything-config)
@@ -876,7 +876,7 @@ they will be displayed with face `file-name-shadow' if
   :group 'anything-config)
 
 (defcustom anything-kill-ring-threshold 10
-  "*Minimum length to be listed by `anything-c-source-kill-ring'."
+  "Minimum length to be listed by `anything-c-source-kill-ring'."
   :type 'integer
   :group 'anything-config)
 
@@ -919,54 +919,54 @@ It is prepended to predefined pairs."
   :group 'anything-config)
 
 (defcustom anything-c-enable-eval-defun-hack t
-  "*If non-nil, execute `anything' using the source at point when C-M-x is pressed.
+  "If non-nil, execute `anything' using the source at point when C-M-x is pressed.
 This hack is invoked when pressing C-M-x in the form \
  (defvar anything-c-source-XXX ...) or (setq anything-c-source-XXX ...)."
   :type 'boolean
   :group 'anything-config)
 
 (defcustom anything-tramp-verbose 0
-  "*Just like `tramp-verbose' but specific to anything.
+  "Just like `tramp-verbose' but specific to anything.
 When set to 0 don't show tramp messages in anything.
 If you want to have the default tramp messages set it to 3."
   :type 'integer
   :group 'anything-config)
 
 (defcustom anything-raise-command nil
-  "*A shell command to jump to a window running specific program.
+  "A shell command to jump to a window running specific program.
 Need external program wmctrl.
 This will be use with `format', so use something like \"wmctrl -xa %s\"."
   :type 'string
   :group 'anything-config)
 
 (defun anything-set-anything-command-map-prefix-key (var key)
-  (declare (special anything-command-map-prefix-key))
-  (when (boundp 'anything-command-map-prefix-key)
-    (global-unset-key (read-kbd-macro anything-command-map-prefix-key)))
-  (setq anything-command-map-prefix-key key)
-  (global-set-key (read-kbd-macro anything-command-map-prefix-key)
-                  'anything-command-map))
+  "The customize set function for `anything-command-map-prefix-key'."
+  (when (boundp var)
+    (define-key ctl-x-map (symbol-value var) nil))
+  (set var key)
+  (define-key ctl-x-map (symbol-value var) 'anything-command-map))
 
-(defcustom anything-command-map-prefix-key "<f5> a"
-  "*The prefix key for all `anything-command-map' commands.
+(defcustom anything-command-map-prefix-key "c"
+  "The prefix key for all `anything-command-map' commands.
+It use `ctl-x-map', so when set, the prefix key will be 'C-x <prefix>'.
 
 !!WARNING!!
 This default value is very likely to be changed,
 because it is under discussion."
-  :type 'string
-  :set 'anything-set-anything-command-map-prefix-key
+  :type  'string
+  :set   'anything-set-anything-command-map-prefix-key
   :group 'anything-config)
 
 (defcustom anything-c-browse-code-regexp-lisp
   "^ *\(def\\(un\\|subst\\|macro\\|face\\|alias\\|advice\\|struct\\|\
 type\\|theme\\|var\\|group\\|custom\\|const\\|method\\|class\\)"
-  "*Regexp used to parse lisp buffer when browsing code."
+  "Regexp used to parse lisp buffer when browsing code."
   :type 'string
   :group 'anything-config)
 
 (defcustom anything-c-browse-code-regexp-python
   "\\<def\\>\\|\\<class\\>"
-  "*Regexp used to parse python buffer when browsing code."
+  "Regexp used to parse python buffer when browsing code."
   :type 'string
   :group 'anything-config)
 
@@ -975,13 +975,13 @@ type\\|theme\\|var\\|group\\|custom\\|const\\|method\\|class\\)"
     (emacs-lisp-mode . ,anything-c-browse-code-regexp-lisp)
     (lisp-mode . ,anything-c-browse-code-regexp-lisp)
     (python-mode . ,anything-c-browse-code-regexp-python))
-  "*Alist to store regexps for browsing code corresponding \
+  "Alist to store regexps for browsing code corresponding \
 to a specific `major-mode'."
   :type 'list
   :group 'anything-config)
 
 (defcustom anything-c-external-programs-associations nil
-  "*Alist to store externals programs associated with file extension.
+  "Alist to store externals programs associated with file extension.
 This variable overhide setting in .mailcap file.
 e.g : '\(\(\"jpg\" . \"gqview\"\) (\"pdf\" . \"xpdf\"\)\) "
   :type 'list
@@ -1008,7 +1008,7 @@ and `anything-c-read-file-map' for this take effect."
   :type 'boolean)
 
 (defcustom anything-ff-history-max-length 100
-  "*Number of elements shown in `anything-find-files' history."
+  "Number of elements shown in `anything-find-files' history."
   :group 'anything-config
   :type 'integer)
 
@@ -1031,7 +1031,7 @@ This make listing much faster, specially on slow machines."
   :type  'boolean)
 
 (defcustom anything-ff-exif-data-program "exiftran"
-  "*Program used to extract exif data of an image file."
+  "Program used to extract exif data of an image file."
   :group 'anything-config
   :type 'string)
 
@@ -1139,7 +1139,7 @@ Windows users should set that to \"explorer.exe\"."
   :type  'string)
 
 (defcustom anything-c-use-adaptative-sorting nil
-  "*Wheter to use or not adaptative sorting.
+  "Wheter to use or not adaptative sorting.
 Even if a source use it, it will have no effect when set to nil."
   :type 'boolean
   :group 'anything-config)
@@ -1152,7 +1152,7 @@ This set `ffap-newfile-prompt'."
 
 
 (defcustom anything-ff-avfs-directory nil
-  "*The default avfs directory, usually '.avfs'.
+  "The default avfs directory, usually '.avfs'.
 When this is set you will be able to expand archive filenames with `C-z'
 inside an avfs directory mounted with mountavfs.
 See <http://sourceforge.net/projects/avf/>."
@@ -1160,7 +1160,7 @@ See <http://sourceforge.net/projects/avf/>."
   :group 'anything-config)
 
 (defcustom anything-ff-file-compressed-list '("gz" "bz2" "zip" "7z")
-  "*Minimal list of compressed files extension."
+  "Minimal list of compressed files extension."
   :type  'list
   :group 'anything-config)
 
@@ -1264,6 +1264,57 @@ Note that you don't need to enable `ido-mode' for this to work."
 Set it to 0 to disable requires-pattern in `anything-M-x'."
   :group 'anything-config
   :type 'boolean)
+
+;;; Build info-index sources with info-index plug-in.
+;;
+;;
+(defun anything-c-build-info-index-command (name doc source buffer)
+  "Define an anything command NAME with documentation DOC.
+Arg SOURCE will be an existing anything source named
+`anything-c-source-info-<NAME>' and BUFFER a string buffer name."
+  (eval (list 'defun name nil doc
+              (list 'interactive)
+              (list 'anything
+                    :sources source
+                    :buffer buffer
+                    :candidate-number-limit 1000))))
+
+(defun anything-c-define-info-index-sources (var-value &optional commands)
+  "Define anything sources named anything-c-source-info-<NAME>.
+Sources are generated for all entries of `anything-c-default-info-index-list'.
+If COMMANDS arg is non--nil build also commands named `anything-info<NAME>'.
+Where NAME is one of `anything-c-default-info-index-list'."
+  (loop with symbols = (loop for str in var-value
+                             collect
+                             (intern (concat "anything-c-source-info-" str)))
+        for sym in symbols
+        for str in var-value
+        do (set sym (list (cons 'name (format "Info index: %s" str))
+                          (cons 'info-index str)))
+        when commands
+        do (let ((com (intern (concat "anything-info-" str))))
+	     (anything-c-build-info-index-command com
+               (format "Predefined anything for %s info." str) sym
+               (format "*anything info %s*" str)))))
+
+(defun anything-info-index-set (var value)
+  (anything-c-define-info-index-sources value t))
+
+(defcustom anything-c-default-info-index-list
+  '("elisp" "cl" "org" "gnus" "tramp" "ratpoison"
+    "zsh" "bash" "coreutils" "fileutils"
+    "find" "sh-utils" "textutils" "libc"
+    "make" "automake" "autoconf" "emacs-lisp-intro"
+    "emacs" "elib" "eieio" "gauche-refe" "guile"
+    "guile-tut" "goops" "screen" "latex" "gawk"
+    "sed" "m4" "wget" "binutils" "as" "bfd" "gprof"
+    "ld" "diff" "flex" "grep" "gzip" "libtool"
+    "texinfo" "info" "gdb" "stabs" "cvsbook" "cvs"
+    "bison" "id-utils" "global")
+  "Info Manual entries to use for building anything info index commands."
+  :group 'anything-config
+  :type 'list
+  :set 'anything-info-index-set)
 
 
 ;;; General internal variables
@@ -5836,56 +5887,6 @@ source.")
                                     (info (replace-regexp-in-string
                                            "^[^:]+: " "" node-str))))))
     (requires-pattern . 2)))
-
-
-;;; Build info-index sources with info-index plug-in.
-;;
-;;
-;; Note that `name' attribute is not needed since
-;; `anything-c-insert-summary' have been removed.
-(defvar anything-c-default-info-index-list
-  '("elisp" "cl" "org" "gnus" "tramp" "ratpoison"
-    "zsh" "bash" "coreutils" "fileutils"
-    "find" "sh-utils" "textutils" "libc"
-    "make" "automake" "autoconf" "emacs-lisp-intro"
-    "emacs" "elib" "eieio" "gauche-refe" "guile"
-    "guile-tut" "goops" "screen" "latex" "gawk"
-    "sed" "m4" "wget" "binutils" "as" "bfd" "gprof"
-    "ld" "diff" "flex" "grep" "gzip" "libtool"
-    "texinfo" "info" "gdb" "stabs" "cvsbook" "cvs"
-    "bison" "id-utils" "global"))
-
-(defun anything-c-build-info-index-command (name doc source buffer)
-  "Define an anything command NAME with documentation DOC.
-Arg SOURCE will be an existing anything source named
-`anything-c-source-info-<NAME>' and BUFFER a string buffer name."
-  (eval (list 'defun name nil doc
-              (list 'interactive)
-              (list 'anything
-                    :sources source
-                    :buffer buffer
-                    :candidate-number-limit 1000))))
-
-(defun anything-c-define-info-index-sources (&optional commands)
-  "Define anything sources named anything-c-source-info-<NAME>.
-Sources are generated for all entries of `anything-c-default-info-index-list'.
-If COMMANDS arg is non--nil build also commands named `anything-info<NAME>'.
-Where NAME is one of `anything-c-default-info-index-list'."
-  (loop with symbols = (loop for str in anything-c-default-info-index-list
-                             collect
-                             (intern (concat "anything-c-source-info-" str)))
-        for sym in symbols
-        for str in anything-c-default-info-index-list
-        do (set sym (list (cons 'name (format "Info index: %s" str))
-                          (cons 'info-index str)))
-        when commands
-        do (let ((com (intern (concat "anything-info-" str))))
-	     (anything-c-build-info-index-command com
-               (format "Predefined anything for %s info." str) sym
-               (format "*anything info %s*" str)))))
-
-;; Define now info-index sources and commands.
-(anything-c-define-info-index-sources t)
 
 
 ;;; Man and woman UI
@@ -11880,7 +11881,9 @@ otherwise search in whole buffer."
          ;; rule out anything-match-plugin because the input is one regexp.
          (delq 'anything-compile-source--match-plugin
                (copy-sequence anything-compile-source-functions))))
-    (anything-other-buffer 'anything-c-source-occur "*Anything Occur*")))
+    (anything :sources 'anything-c-source-occur
+              :buffer "*Anything Occur*"
+              :history 'anything-c-grep-history)))
 
 ;;;###autoload
 (defun anything-browse-code ()
