@@ -1298,6 +1298,7 @@ Where NAME is one of `anything-c-default-info-index-list'."
                (format "*anything info %s*" str)))))
 
 (defun anything-info-index-set (var value)
+  (set var value)
   (anything-c-define-info-index-sources value t))
 
 (defcustom anything-c-default-info-index-list
@@ -3901,7 +3902,7 @@ expand to this directory."
                                 ;; and one directory candidate, move to it.
                                 (anything-next-line))
                               (anything-get-selection))))
-            (when (file-directory-p cur-cand)
+            (when (and (stringp cur-cand) (file-directory-p cur-cand))
               (if (and (not (string-match "^.*[.]\\{1,2\\}$" cur-cand)) ; [1]
                        ;; Maybe we are here because completed-p is true
                        ;; but check this again to be sure. (Windows fix)
