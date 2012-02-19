@@ -2283,6 +2283,16 @@ Otherwise your command will be called many times like this:
 \\[anything-send-bug-report-from-anything]:BugReport."
     "String displayed in mode-line in `anything-c-source-buffers-list'"))
 
+(defvar anything-occur-mode-line
+  "\\<anything-map>\
+\\[anything-help]:Help,\
+\\<anything-occur-map>\
+\\[anything-occur-run-query-replace-regexp]:Query replace regexp,\
+\\<anything-map>\
+\\[anything-select-action]:Acts,\
+\\[anything-exit-minibuffer]/\\[anything-select-2nd-action-or-end-of-line]/\
+\\[anything-select-3rd-action]:NthAct,\
+\\[anything-send-bug-report-from-anything]:BugReport.")
 
 
 ;;; Utilities Functions
@@ -3057,7 +3067,9 @@ Don't set it directly, use instead `anything-ff-auto-update-initial-value'.")
 (defvar anything-ff-default-directory nil)
 (defvar anything-ff-history nil)
 (defvar anything-ff-cand-to-mark nil)
-
+(defvar anything-ff-url-regexp
+  "\\`\\(news\\(post\\)?:\\|nntp:\\|mailto:\\|file:\\|\\(ftp\\|https?\\|telnet\\|gopher\\|www\\|wais\\):/?/?\\).*"
+  "Same as `ffap-url-regexp' but match earlier possible url.")
 
 (defvar anything-c-source-find-files
   `((name . "Find Files")
@@ -3936,7 +3948,8 @@ This happen only in function using sources that are
 `anything-file-completion-source-p' compliant."
   (when (and (anything-file-completion-source-p)
              (string-match ".*\\(/~/\\|/\\{2\\}\\|/[.]\\{1\\}/\\)$"
-                           anything-pattern))
+                           anything-pattern)
+             (not (string-match anything-ff-url-regexp anything-pattern)))
     (let ((match (match-string 1 anything-pattern)))
       (cond ((string= match "//")
              ;; Expand to "/" or "c:/"
@@ -4008,7 +4021,8 @@ purpose."
           ((string-match ".*\\(~?/?[.]\\{1\\}/\\)$" pattern)
            (with-anything-current-buffer
              (expand-file-name default-directory)))
-          ((string-match ".*\\(~//\\|//\\)$" pattern)
+          ((and (string-match ".*\\(~//\\|//\\)$" pattern)
+                (not (string-match anything-ff-url-regexp anything-pattern)))
            (expand-file-name "/") ; Expand to "/" or "c:/"
            )
           ((string-match "^~\\|.*/~/$" pattern)
@@ -4059,7 +4073,8 @@ purpose."
     (setq anything-ff-default-directory
           (if (string= anything-pattern "")
               (expand-file-name "/") ; Expand to "/" or "c:/"
-              (unless (string-match ffap-url-regexp path)
+              (unless (or (string-match anything-ff-url-regexp path)
+                          (string-match ffap-url-regexp path))
                 ;; If path is an url *default-directory have to be nil.
                 path-name-dir)))
     (cond ((string= path "Invalid tramp file name")
@@ -4075,6 +4090,8 @@ purpose."
                    ;; in `anything-buffer'.
                    (list path))))
           ((or (file-regular-p path)
+               ;; `ffap-url-regexp' don't match until url is complete.
+               (string-match anything-ff-url-regexp path)
                (and (not (file-exists-p path)) (string-match "/$" path))
                (and ffap-url-regexp (string-match ffap-url-regexp path)))
            (list path))
@@ -4093,16 +4110,19 @@ It is same as `directory-files' but always returns the
 dotted filename '.' and '..' on root directories on Windows
 systems."
   (setq directory (expand-file-name directory))
-  (if (string-match "^[a-zA-Z]\\{1\\}:/$" directory)
-      (let* ((dot (concat directory "."))
-             (dot2 (concat directory ".."))
-             (lsdir (remove
-                     dot2
-                     (remove
-                      dot
-                      (directory-files directory full)))))
-        (append (list dot dot2) lsdir))
-      (directory-files directory full)))
+  (let ((ls (directory-files directory full))
+        dot dot2 lsdir)
+    (if (or
+         ;; A windows volume.
+         (string-match "^[a-zA-Z]\\{1\\}:/$" directory)
+         ;; Empty directories on ftp hosts may have no dot dirs.
+         (and (file-remote-p directory)
+              (string-match "^/ftp:" directory)))
+        (progn (setq dot (concat directory "."))
+               (setq dot2 (concat directory ".."))
+               (setq lsdir (remove dot2 (remove dot ls)))
+               (append (list dot dot2) lsdir))
+        ls)))
 
 (defun anything-ff-transform-fname-for-completion (fname)
   "Return FNAME with it's basename modified as a regexp.
@@ -4306,7 +4326,8 @@ return FNAME prefixed with [?]."
                       " " 'display
                       (propertize "[@]" 'face 'anything-ff-prefix))))
     (cond ((or file-or-symlinkp (file-exists-p fname)) fname)
-          ((string-match ffap-url-regexp fname)
+          ((or (string-match anything-ff-url-regexp fname)
+               (string-match ffap-url-regexp fname))
            (concat prefix-url " " fname))
           ((or new-file (not (file-exists-p fname)))
            (concat prefix-new " " fname)))))
@@ -4329,7 +4350,8 @@ is non--nil."
   (loop for i in files
         for disp = (if (and anything-ff-transformer-show-only-basename
                             (not (string-match "[.]\\{1,2\\}$" i))
-                            (not (string-match ffap-url-regexp i)))
+                            (not (string-match ffap-url-regexp i))
+                            (not (string-match anything-ff-url-regexp i)))
                        (anything-c-basename i) i)
         collect
         (cond ((and (stringp (car (file-attributes i)))
@@ -8685,6 +8707,7 @@ i.e Don't replace inside a word, regexp is surrounded with \\bregexp\\b."
                ("Query replace regexp (C-u Not inside word.)"
                 . anything-c-occur-query-replace-regexp)))
     (recenter)
+    (mode-line . anything-occur-mode-line)
     (keymap . ,anything-occur-map)
     (requires-pattern . 1)
     (delayed)))
@@ -12372,6 +12395,7 @@ With a prefix arg reload cache."
     (setq anything-ec-target (or target " "))
     (with-anything-show-completion beg end
       (anything :sources 'anything-c-source-esh
+                :buffer "*anything pcomplete*"
                 :input (anything-ff-set-pattern ; Handle tramp filenames.
                         (car (last (ignore-errors ; Needed in lisp symbols completion.
                                      (pcomplete-parse-arguments)))))))))
